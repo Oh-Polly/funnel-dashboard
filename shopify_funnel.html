@@ -78,6 +78,12 @@
 <div class="subtitle" id="windowLabel"></div>
 
 <div class="toggle-group" id="srcBtns"><span class="label">Source</span></div>
+<div class="toggle-group" id="cmpBtns">
+  <span class="label">Compare</span>
+  <div class="pill active" data-cmp="wow">vs recent average</div>
+  <div class="pill" data-cmp="yoy">vs last year</div>
+  <div class="pill" data-cmp="both">Both</div>
+</div>
 
 <div id="app">
   <div class="verdict" id="verdict"></div>
@@ -116,7 +122,7 @@
     <table id="cvrTable"></table>
   </div>
 
-  <div class="section-title" id="testsTitle">Top 3 tests this week — ranked by estimated £ impact (always all traffic)</div>
+  <div class="section-title" id="testsTitle">Top 3 tests this week — ranked by monthly revenue at risk (always all traffic)</div>
   <div id="testIdeas"></div>
 
   <div class="footer-note" id="notes"></div>
@@ -176,6 +182,13 @@ function findChangeDate(rows, def, baseCR){
 }
 
 let activeSource = "all";
+let cmpMode = "wow"; // "wow" (vs recent avg, default) | "yoy" (vs last year) | "both"
+document.getElementById("cmpBtns").querySelectorAll(".pill").forEach(p => p.addEventListener("click", ()=>{
+  document.getElementById("cmpBtns").querySelectorAll(".pill").forEach(x=>x.classList.remove("active"));
+  p.classList.add("active");
+  cmpMode = p.dataset.cmp;
+  render();
+}));
 function renderSrcBtns(){
   const el = document.getElementById("srcBtns");
   el.innerHTML = '<span class="label">Source</span>' + SOURCES.map(s =>
@@ -189,10 +202,21 @@ function renderSrcBtns(){
 
 let trendChart = null, trendRows = [];
 let activeMetric = 4;
+function linearFit(ys){ // least-squares straight line through the daily series
+  const n = ys.length;
+  if (n < 2) return ys.slice();
+  let sx=0, sy=0, sxx=0, sxy=0;
+  for (let i=0;i<n;i++){ sx+=i; sy+=ys[i]; sxx+=i*i; sxy+=i*ys[i]; }
+  const slope = (n*sxy - sx*sy) / (n*sxx - sx*sx || 1);
+  const intercept = (sy - slope*sx) / n;
+  return ys.map((_,i)=> intercept + slope*i);
+}
 function renderTrend(){
   const canvas = document.getElementById("trend");
   const labels = trendRows.map(r => r[0].slice(5,10));
   const series = trendRows.map(r => +r[activeMetric]);
+  const fit = linearFit(series);
+  const dir = fit.length>1 ? fit[fit.length-1]-fit[0] : 0;
   if (trendChart) trendChart.destroy();
   trendChart = new Chart(canvas, {
     type: "line",
@@ -201,11 +225,16 @@ function renderTrend(){
       borderColor: "#1d1d1f", backgroundColor: "rgba(29,29,31,0.05)",
       borderWidth: 1.5, pointRadius: 2, pointBackgroundColor: "#cbd5e1",
       tension: 0.25, fill: true,
+    },{
+      label: "Direction over the 35 days", data: fit,
+      borderColor: dir < 0 ? "#b91c1c" : "#047857", borderDash: [6,4],
+      borderWidth: 1.5, pointRadius: 0, fill: false, tension: 0,
     }]},
     options: {
       responsive: true, maintainAspectRatio: false,
       plugins: { legend: { display: false },
-        tooltip: { callbacks: { label: c => fmtInt(c.parsed.y) + " " + STEP_LABELS[activeMetric].toLowerCase() } } },
+        tooltip: { filter: c => c.datasetIndex === 0,
+          callbacks: { label: c => fmtInt(c.parsed.y) + " " + STEP_LABELS[activeMetric].toLowerCase() } } },
       scales: { y: { beginAtZero: false, ticks: { font: { size: 10 } } },
                 x: { ticks: { font: { size: 10 }, maxRotation: 0, autoSkipPadding: 12 } } },
     },
@@ -262,7 +291,7 @@ function render(){
     `Weekly snapshot of Shopify data, taken ${fmtDate(SNAPSHOT.bakedAt)}. Funnel: Sessions &rarr; Add to cart &rarr; Checkout &rarr; Purchase. ` +
     `&nbsp;&middot;&nbsp; <strong>Source caveat:</strong> Shopify's referrer classification is cruder than GA4 channels &mdash; ad-driven traffic largely lands in &lsquo;direct&rsquo;/&lsquo;social&rsquo;. Use sources for movement, GA4 for channel mix. ` +
     `&nbsp;&middot;&nbsp; <strong>Consent caveat:</strong> Shopify sees traffic GA4 cannot (GDPR consent hides 20&ndash;40% of GA4 UK traffic) &mdash; numbers here run higher than the GA4 dashboard by design. ` +
-    `&nbsp;&middot;&nbsp; Revenue-at-risk estimates assume AOV £100. &lsquo;Drop began&rsquo; dates are estimates from daily step-conversion vs the 4-week baseline.`;
+    `&nbsp;&middot;&nbsp; <strong>Revenue at risk</strong> = what one month of the current gap is worth if it persists, assuming an average order of £100. It is a sizing tool for prioritising tests, not a forecast &mdash; one week of data cannot justify an annual figure. &lsquo;Drop began&rsquo; dates are estimates from daily step-conversion vs the 4-week baseline.`;
 }
 
 function renderKpis(cur, baseW, yy){
@@ -276,11 +305,15 @@ function renderKpis(cur, baseW, yy){
     { label:"Add-to-cart rate", value:pct(cur.atc/Math.max(cur.sessions,1)), w:relDelta(cur.atc/Math.max(cur.sessions,1), baseW.atc/Math.max(baseW.sessions,1)), y:relDelta(cur.atc/Math.max(cur.sessions,1), yy.atc/Math.max(yy.sessions,1)) },
   ];
   document.getElementById("kpis").innerHTML = defs.map(k=>{
-    const cls = k.w===null? "" : k.w > 0.02 ? "kpi-up" : k.w < -0.02 ? "kpi-down" : "";
+    const primary = cmpMode==="yoy" ? k.y : k.w;
+    const cls = primary===null? "" : primary > 0.02 ? "kpi-up" : primary < -0.02 ? "kpi-down" : "";
+    const parts = [];
+    if (cmpMode!=="yoy") parts.push(`<span class="${deltaCls(k.w)}">${fmtSigned(k.w)} vs recent avg</span>`);
+    if (cmpMode!=="wow") parts.push(`<span class="${deltaCls(k.y)}">${fmtSigned(k.y)} vs last year</span>`);
     return `<div class="kpi ${cls}">
       <div class="kpi-label">${k.label}</div>
       <div class="kpi-value">${k.value}</div>
-      <div class="kpi-delta"><span class="${deltaCls(k.w)}">${fmtSigned(k.w)} vs recent avg</span> &nbsp;<span class="${deltaCls(k.y)}">${fmtSigned(k.y)} vs last year</span></div>
+      <div class="kpi-delta">${parts.join(" &nbsp;")}</div>
     </div>`;
   }).join("");
 }
@@ -337,8 +370,8 @@ function renderVerdict(cur, baseW, yy, base, cut){
   if (topTest){
     const matchesWeak = wk && topTest.title === `${wk.def.area} test`;
     action = matchesWeak
-      ? `What to do about it: this week's weak link is exactly what <a href="#testIdeas">Test #1 — ${topTest.title}</a> targets (est. ~£${fmtInt(topTest.impact)}/yr).`
-      : `Biggest £ opportunity this week: <a href="#testIdeas">Test #1 — ${topTest.title}</a> (est. ~£${fmtInt(topTest.impact)}/yr) — see the test list below.`;
+      ? `What to do about it: this week's weak link is exactly what <a href="#testIdeas">Test #1 — ${topTest.title}</a> targets (~£${fmtInt(topTest.impact)} at risk per month if it persists).`
+      : `Biggest £ exposure this week: <a href="#testIdeas">Test #1 — ${topTest.title}</a> (~£${fmtInt(topTest.impact)} at risk per month if it persists) — see the test list below.`;
   }
 
   document.getElementById("verdict").innerHTML =
@@ -366,17 +399,20 @@ function renderFunnelStrip(cur, baseW, yy, base, cut){
     if (i===bnIdx) cls.push("bottleneck"); else if (i===winIdx && winIdx!==bnIdx) cls.push("win");
     const tag = i===bnIdx ? " (bottleneck)" : (i===winIdx && winIdx!==bnIdx ? " (doing well)" : "");
     const why = (i===bnIdx && wk && wk.def===STEP_DEFS[i-1]) ? segmentHint(wk) : "";
+    const lines = [];
+    if (cmpMode!=="yoy") lines.push(`<div class="step-delta ${deltaCls(s.w)}">${fmtSigned(s.w)} vs recent avg</div>`);
+    if (cmpMode!=="wow") lines.push(`<div class="step-yoy"><span class="${deltaCls(s.y)}">${fmtSigned(s.y)} vs last year</span></div>`);
     return `<div class="${cls.join(' ')}">
       <div class="step-label">${s.label}${tag}</div>
       <div class="step-val">${fmtInt(s.val)}</div>
-      <div class="step-delta ${deltaCls(s.w)}">${fmtSigned(s.w)} vs recent avg</div>
-      <div class="step-yoy"><span class="${deltaCls(s.y)}">${fmtSigned(s.y)} vs last year</span></div>
+      ${lines.join("")}
       ${why ? `<div class="step-why">${why}</div>` : ``}
     </div>`;
   };
   const arrowCell = (i) => { // conversion from step i to step i+1
     const def = STEP_DEFS[i];
-    const cv = stepCR(cur,def), d = relDelta(cv, stepCR(base,def));
+    const cv = stepCR(cur,def);
+    const d = cmpMode==="yoy" ? relDelta(cv, stepCR(yy,def)) : relDelta(cv, stepCR(base,def));
     return `<div class="funnel-arrow">
       <div class="glyph">&rarr;</div>
       <div class="cr">${pct(cv,1)}</div>
@@ -452,7 +488,10 @@ function buildTestCands(){
   const cur = sumRows(A.daily, curFrom, curTo);
   const base = sumRows(A.daily, baseFrom, baseTo);
   const yy = sumRows(A.yoy, yoyFrom, yoyTo);
-  const annualValue = cur.purchase * 52 * AOV;
+  // Impact = what one month of this gap is worth if it persists (4 weeks of current
+  // purchase volume × AOV). Deliberately NOT annualised — one week's movement is not
+  // evidence the gap lasts a year.
+  const monthValue = cur.purchase * 4 * AOV;
 
   const cands = [];
 
@@ -463,12 +502,12 @@ function buildTestCands(){
     const worst = Math.min(dW??0, dY??0);
     let impact, why;
     if (worst < -0.02){
-      impact = Math.min(Math.abs(worst), 0.5) * annualValue;
+      impact = Math.min(Math.abs(worst), 0.5) * monthValue;
       const startDate = findChangeDate(A.daily, def, bv);
       const vs = (dY!==null && dY < (dW??0)) ? `${fmtSigned(dY)} vs last year` : `${fmtSigned(dW)} vs recent avg`;
       why = `${def.label} now ${pct(cv,1)} — ${vs}` + (startDate? `; drop began around ${fmtDate(startDate)}` : ``);
     } else {
-      impact = 0.025 * annualValue;
+      impact = 0.025 * monthValue;
       why = `${def.label} stable at ${pct(cv,1)} — no decline; proactive lift opportunity`;
     }
     const devW = worstSegmentForStep(A.devCur, A.devPrev, def);
@@ -494,7 +533,7 @@ function buildTestCands(){
       }
       cands.push({
         title:"Mobile experience test",
-        impact: Math.min(Math.abs(mD - dD),0.5) * mob.purchase * 52 * AOV,
+        impact: Math.min(Math.abs(mD - dD),0.5) * mob.purchase * 4 * AOV,
         why:`Mobile conversion is ${fmtSigned(mD)} vs the week before while desktop is ${fmtSigned(dD)} — a mobile-specific issue, often a release bug rather than shopper behaviour`,
         where: (ws? `where in funnel: <b>${ws.def.label}</b> (${ws.def.area}), mobile ${pct(ws.prev,1)} &rarr; ${pct(ws.cur,1)}` : "") + srcLine,
         tests: EXAMPLE_TESTS.device });
@@ -511,7 +550,7 @@ function buildTestCands(){
     if (d!==null && d < -0.12){
       cands.push({
         title:`${k} market test`,
-        impact: Math.min(Math.abs(d),0.5) * c.purchase * 52 * AOV,
+        impact: Math.min(Math.abs(d),0.5) * c.purchase * 4 * AOV,
         why:`${k} conversion is ${fmtSigned(d)} vs the week before, and ${k} is ${pct(c.sessions/totalSess,0)} of all traffic`,
         where:`where: full-funnel for ${k} — check shipping, duties, payment methods first`,
         tests: EXAMPLE_TESTS.geo });
@@ -531,7 +570,7 @@ function renderTopTests(){
       <div style="display:flex; align-items:baseline; gap:8px; margin-bottom:6px; flex-wrap:wrap;">
         <span class="priority-pill ${prio[0]}">${prio[1]}</span>
         <strong>${c.title}</strong>
-        <span style="margin-left:auto; color:#065f46; font-weight:700;">~£${fmtInt(c.impact)} / yr</span>
+        <span style="margin-left:auto; color:#065f46; font-weight:700;">~£${fmtInt(c.impact)} at risk / month</span>
       </div>
       <div style="font-size:12px; color:#4b5563; margin-bottom:2px;">${c.why}</div>
       ${c.where? `<div class="attrib">${c.where}</div>` : ``}
