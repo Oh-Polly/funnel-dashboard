@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Oh Polly — Weekly Funnel (Shopify)</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js" crossorigin="anonymous"></script>
+<style>
+  :root { color-scheme: light; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0 auto; padding: 16px; color: #1d1d1f; background: #ffffff; font-size: 13px; line-height: 1.4; max-width: 1100px; }
+  #gate { position:fixed; inset:0; background:#fff; display:flex; align-items:center; justify-content:center; z-index:9999; }
+  #gate-box { text-align:center; }
+  #gate-box h2 { font-size:16px; font-weight:600; margin:0 0 16px; color:#1d1d1f; }
+  #gate-box input { padding:8px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; width:220px; outline:none; }
+  #gate-box input:focus { border-color:#1d1d1f; }
+  #gate-box button { display:block; margin:10px auto 0; padding:8px 24px; background:#1d1d1f; color:#fff; border:none; border-radius:6px; font-size:13px; font-weight:600; cursor:pointer; }
+  #gate-box .err { color:#b91c1c; font-size:12px; margin-top:8px; min-height:16px; }
+  h1 { font-size: 18px; margin: 0 0 4px 0; font-weight: 600; }
+  .subtitle { color: #6b7280; font-size: 12px; margin-bottom: 14px; }
+  .baked-badge { display:inline-block; background:#eef3fb; color:#2456a6; border-radius:4px; padding:2px 8px; font-size:11px; font-weight:600; margin-left:8px; vertical-align:middle; }
+  .toggle-group { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; }
+  .toggle-group .label { color: #6b7280; font-size: 11px; margin-right: 4px; font-weight: 600; min-width: 42px; }
+  .pill { padding: 5px 10px; border-radius: 5px; cursor: pointer; background: #f3f4f6; color: #4b5563; border: 1px solid transparent; font-size: 12px; font-weight: 500; user-select: none; }
+  .pill.active { background: #1d1d1f; color: #fff; }
+  .pill.disabled { background: #f9fafb; color: #d1d5db; cursor: not-allowed; position: relative; }
+  .pill.disabled:hover::after { content: attr(data-tooltip); position: absolute; bottom: 110%; left: 0; background: #1d1d1f; color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 11px; white-space: nowrap; z-index: 10; }
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 14px; margin-top: 8px; }
+  .kpi { border: 1px solid #d1d5db; border-radius: 8px; padding: 12px 14px; background: #fff; border-left: 4px solid #d1d5db; display: block; }
+  .kpi.kpi-up   { border-left-color: #047857; background: #f0fdf4; }
+  .kpi.kpi-down { border-left-color: #b91c1c; background: #fef2f2; }
+  .kpi-label { color: #6b7280; font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px; }
+  .kpi-value { font-size: 22px; font-weight: 700; margin-top: 4px; letter-spacing: -0.5px; color: #111827; }
+  .kpi-delta { font-size: 12px; margin-top: 4px; font-weight: 500; }
+  .section-title { font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.4px; margin: 14px 0 6px 0; }
+  .funnel-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin: 10px 0 16px 0; }
+  .funnel-step { border: 1px solid #e5e7eb; border-radius: 6px; padding: 8px 10px; }
+  .funnel-step .step-label { color: #6b7280; font-size: 11px; }
+  .funnel-step .step-val { font-size: 16px; font-weight: 600; margin-top: 2px; }
+  .funnel-step .step-delta { font-size: 11px; margin-top: 2px; }
+  .funnel-step .step-yoy { font-size: 11px; margin-top: 1px; color: #6b7280; }
+  .funnel-step.bottleneck { border-color: #b91c1c; background: #fef2f2; }
+  .funnel-step.win { border-color: #047857; background: #f0fdf4; }
+  .delta-up { color: #047857; }
+  .delta-down { color: #b91c1c; }
+  .delta-flat { color: #6b7280; }
+  .metric-selector { display: flex; gap: 4px; align-items: center; margin: -2px 0 8px 0; }
+  .metric-selector .label { color: #6b7280; font-size: 11px; margin-right: 4px; font-weight: 600; }
+  .chart-container { position: relative; height: 240px; margin: 6px 0 16px 0; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+  th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px; color: #6b7280; padding: 7px 10px; border-bottom: 1px solid #e5e7eb; font-weight: 600; }
+  td { padding: 7px 10px; border-bottom: 1px solid #f3f4f6; font-size: 12.5px; }
+  td .d { font-size: 11px; margin-left: 6px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media (max-width: 900px){ .grid2 { grid-template-columns: 1fr; } }
+  @media (max-width: 760px){ .kpis { grid-template-columns: repeat(2,1fr); } .funnel-strip { grid-template-columns: repeat(2,1fr); } }
+  .dd-test-card { border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px 14px; margin-bottom: 8px; background: #fff; }
+  .priority-pill { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; }
+  .priority-high { background: #fee2e2; color: #991b1b; }
+  .priority-med  { background: #fef9c3; color: #854d0e; }
+  .priority-low  { background: #e5e7eb; color: #4b5563; }
+  .dd-test-card strong { color: #1d1d1f; }
+  .dd-test-card .attrib { font-size: 12px; color: #4b5563; margin: 6px 0; padding: 8px 10px; background: #f9fafb; border-radius: 6px; line-height: 1.55; }
+  .dd-test-card .attrib b { color: #1d1d1f; }
+  .dd-test-empty { color: #6b7280; font-style: italic; }
+  .footer-note { font-size: 11px; color: #9ca3af; margin-top: 16px; padding-top: 10px; border-top: 1px solid #f3f4f6; }
+</style>
+</head>
+<body>
+<div id="gate">
+  <div id="gate-box">
+    <h2>Oh Polly — Weekly Funnel</h2>
+    <input type="password" id="gate-input" placeholder="Password" autofocus />
+    <button onclick="checkGate()">Enter</button>
+    <div class="err" id="gate-err"></div>
+  </div>
+</div>
+<h1>Weekly Funnel <span id="storeName"></span><span class="baked-badge" id="bakedBadge"></span></h1>
+<div class="subtitle" id="windowLabel"></div>
+
+<div class="toggle-group" id="srcBtns"><span class="label">Source</span></div>
+
+<div id="app">
+  <div class="kpis" id="kpis"></div>
+
+  <div class="section-title">Funnel snapshot — last 7 full days (WoW vs 4-week avg)</div>
+  <div class="funnel-strip" id="funnelStrip"></div>
+
+  <div class="section-title">Trend (last 35 days)</div>
+  <div class="metric-selector" id="metricPills">
+    <span class="label">Show:</span>
+    <div class="pill" data-metric="1">Sessions</div>
+    <div class="pill" data-metric="2">ATC</div>
+    <div class="pill" data-metric="3">Checkout</div>
+    <div class="pill active" data-metric="4">Purchase</div>
+  </div>
+  <div class="chart-container"><canvas id="trend"></canvas></div>
+
+  <div class="grid2">
+    <div>
+      <div class="section-title">By source (7d, WoW)</div>
+      <table id="sourceTable"></table>
+    </div>
+    <div>
+      <div class="section-title">By device (7d, WoW)</div>
+      <table id="deviceTable"></table>
+    </div>
+  </div>
+  <div class="section-title">Top countries (7d, WoW)</div>
+  <table id="countryTable"></table>
+
+  <div class="section-title">Top 3 tests this week — ranked by £ impact (all traffic, fixed regardless of filters)</div>
+  <div id="testIdeas"></div>
+
+  <div class="footer-note" id="notes"></div>
+</div>
+
+<script>
+(function(){
+  const PW = "OhPolly757x49";
+  if (sessionStorage.getItem("fp_auth") === "1") {
+    document.getElementById("gate").style.display = "none";
+  }
+  window.checkGate = function(){
+    if (document.getElementById("gate-input").value === PW) {
+      sessionStorage.setItem("fp_auth","1");
+      document.getElementById("gate").style.display = "none";
+    } else {
+      document.getElementById("gate-err").textContent = "Incorrect password";
+      document.getElementById("gate-input").value = "";
+      document.getElementById("gate-input").focus();
+    }
+  };
+  document.addEventListener("keydown", function(e){
+    if (e.key === "Enter" && document.getElementById("gate").style.display !== "none") checkGate();
+  });
+})();
+
+// Injected weekly by build_share_funnel.py — do not edit by hand
+const SNAPSHOT = __SNAPSHOT_JSON__;
+
+const SOURCES = ["all","direct","search","social"];
+const STEP_LABELS = ["", "Sessions", "Add to cart", "Checkout", "Purchase"];
+const STEP_DEFS = [
+  { key:"s2a", label:"Sessions → ATC", num:2, den:1, area:"PDP / product discovery" },
+  { key:"a2c", label:"ATC → Checkout", num:3, den:2, area:"Cart" },
+  { key:"c2p", label:"Checkout → Purchase", num:4, den:3, area:"Checkout" },
+];
+const EXAMPLE_TESTS = {
+  s2a: ["PDP imagery order", "Size & fit guidance", "Review placement / social proof"],
+  a2c: ["Shipping-threshold messaging in cart", "Cart drawer vs full page", "Cross-sell density"],
+  c2p: ["Express-pay prominence", "Shipping cost & speed display", "Payment method options"],
+  geo: ["Duties/shipping clarity for the market", "Local payment methods", "Currency & delivery promise"],
+  device: ["Mobile-only variant of the affected step", "Check recent theme/app releases for mobile regressions"],
+};
+
+const fmtInt = n => Math.round(n).toLocaleString();
+const pct = (n,d=2) => (100*n).toFixed(d)+"%";
+const qd = d => d.toISOString().slice(0,10);
+function addDays(d,n){ const x=new Date(d); x.setDate(x.getDate()+n); return x; }
+function relDelta(cur, base){ return (base>0) ? (cur-base)/base : null; }
+function deltaCls(d){ return d===null? "delta-flat" : d>0.005? "delta-up" : d<-0.005? "delta-down" : "delta-flat"; }
+function fmtSigned(d){ return d===null? "n/a" : (d>=0?"+":"")+(100*d).toFixed(1)+"%"; }
+function fmtDate(iso){ const d=new Date(iso+"T12:00:00"); return d.toLocaleDateString("en-GB",{day:"numeric",month:"short"}); }
+
+function sumRows(rows, from, to){
+  const out = { sessions:0, atc:0, checkout:0, purchase:0 };
+  for (const row of rows){
+    const d = row[0].slice(0,10);
+    if (d >= from && d <= to){ out.sessions+=+row[1]; out.atc+=+row[2]; out.checkout+=+row[3]; out.purchase+=+row[4]; }
+  }
+  return out;
+}
+const stepCR = (t, def) => {
+  const dens = { 1:t.sessions, 2:t.atc, 3:t.checkout };
+  const nums = { 2:t.atc, 3:t.checkout, 4:t.purchase };
+  return dens[def.den] > 0 ? nums[def.num]/dens[def.den] : 0;
+};
+function findChangeDate(rows, def, baseCR){
+  let runStart = null;
+  for (let i = rows.length-1; i >= 0; i--){
+    const den = +rows[i][def.den], num = +rows[i][def.num];
+    if (den < 50) continue;
+    const cr = num/den;
+    if (cr < baseCR * 0.97) runStart = rows[i][0].slice(0,10);
+    else break;
+  }
+  return runStart;
+}
+
+let activeSource = "all";
+function renderSrcBtns(){
+  const el = document.getElementById("srcBtns");
+  el.innerHTML = '<span class="label">Source</span>' + SOURCES.map(s =>
+    `<div class="pill ${s===activeSource?'active':''}" data-src="${s}">${s==="all"?"All":s[0].toUpperCase()+s.slice(1)}</div>`
+  ).join("");
+  el.querySelectorAll("[data-src]").forEach(p => p.addEventListener("click", ()=>{
+    activeSource = p.dataset.src;
+    renderSrcBtns(); render();
+  }));
+}
+
+let trendChart = null, trendRows = [];
+let activeMetric = 4;
+function renderTrend(){
+  const canvas = document.getElementById("trend");
+  const labels = trendRows.map(r => r[0].slice(5,10));
+  const series = trendRows.map(r => +r[activeMetric]);
+  if (trendChart) trendChart.destroy();
+  trendChart = new Chart(canvas, {
+    type: "line",
+    data: { labels, datasets: [{
+      label: STEP_LABELS[activeMetric], data: series,
+      borderColor: "#1d1d1f", backgroundColor: "rgba(29,29,31,0.05)",
+      borderWidth: 1.5, pointRadius: 2, pointBackgroundColor: "#cbd5e1",
+      tension: 0.25, fill: true,
+    }]},
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false },
+        tooltip: { callbacks: { label: c => fmtInt(c.parsed.y) + " " + STEP_LABELS[activeMetric].toLowerCase() } } },
+      scales: { y: { beginAtZero: false, ticks: { font: { size: 10 } } },
+                x: { ticks: { font: { size: 10 }, maxRotation: 0, autoSkipPadding: 12 } } },
+    },
+  });
+}
+document.getElementById("metricPills").querySelectorAll(".pill").forEach(p => p.addEventListener("click", ()=>{
+  document.getElementById("metricPills").querySelectorAll(".pill").forEach(x=>x.classList.remove("active"));
+  p.classList.add("active");
+  activeMetric = +p.dataset.metric;
+  renderTrend();
+}));
+
+function render(){
+  const cut = SNAPSHOT.cuts[activeSource];
+  const today = new Date(SNAPSHOT.bakedAt + "T12:00:00");
+  const yest = addDays(today,-1);
+  const curFrom = addDays(yest,-6), curTo = yest;
+  const baseFrom = addDays(yest,-34), baseTo = addDays(yest,-7);
+  const yoyFrom = addDays(curFrom,-364), yoyTo = addDays(curTo,-364);
+
+  const cur = sumRows(cut.daily, qd(curFrom), qd(curTo));
+  const base = sumRows(cut.daily, qd(baseFrom), qd(baseTo));
+  const yy = sumRows(cut.yoy, qd(yoyFrom), qd(yoyTo));
+  const baseW = { sessions:base.sessions/4, atc:base.atc/4, checkout:base.checkout/4, purchase:base.purchase/4 };
+
+  document.getElementById("storeName").textContent = "— " + SNAPSHOT.store;
+  document.getElementById("bakedBadge").textContent = "Data to " + fmtDate(qd(curTo)) + " · updates Mondays";
+  const srcLabel = activeSource==="all" ? "" : ` · Source: ${activeSource}`;
+  document.getElementById("windowLabel").textContent =
+    `${qd(curFrom)} → ${qd(curTo)}${srcLabel} · WoW vs trailing 4-week avg · YoY vs ${qd(yoyFrom)} → ${qd(yoyTo)} · Source: Shopify (weekly snapshot)`;
+
+  renderKpis(cur, baseW, yy);
+  renderFunnelStrip(cur, baseW, yy, base);
+  trendRows = cut.daily; renderTrend();
+  renderSplitTable("sourceTable", "Source", SNAPSHOT.cuts.all.srcCur, SNAPSHOT.cuts.all.srcPrev, null);
+  renderSplitTable("deviceTable", "Device", cut.devCur, cut.devPrev, ["mobile","desktop","tablet"]);
+  renderSplitTable("countryTable", "Country", cut.ctryCur, cut.ctryPrev, null);
+
+  document.getElementById("notes").innerHTML =
+    `Weekly snapshot of Shopify data (ShopifyQL sessions), baked ${fmtDate(SNAPSHOT.bakedAt)}. Funnel: Sessions &rarr; ATC &rarr; Checkout &rarr; Purchase. ` +
+    `&nbsp;&middot;&nbsp; <strong>Source caveat:</strong> Shopify's referrer classification is cruder than GA4 channels &mdash; ad-driven traffic largely lands in &lsquo;direct&rsquo;/&lsquo;social&rsquo;. Use sources for movement, GA4 for channel mix. ` +
+    `&nbsp;&middot;&nbsp; <strong>Consent caveat:</strong> Shopify sees traffic GA4 cannot (GDPR consent hides 20&ndash;40% of GA4 UK traffic) &mdash; numbers here run higher than the GA4 dashboard by design. ` +
+    `&nbsp;&middot;&nbsp; Revenue-at-risk estimates assume AOV £100. &lsquo;Drop began&rsquo; dates are estimates from daily step-conversion vs the 4-week baseline.`;
+}
+
+function renderKpis(cur, baseW, yy){
+  const cvrNow = cur.sessions? cur.purchase/cur.sessions : 0;
+  const cvrBase = baseW.sessions? baseW.purchase/baseW.sessions : 0;
+  const cvrYoy = yy.sessions? yy.purchase/yy.sessions : 0;
+  const defs = [
+    { label:"Sessions", value:fmtInt(cur.sessions), w:relDelta(cur.sessions,baseW.sessions), y:relDelta(cur.sessions,yy.sessions) },
+    { label:"CVR (Sess→Pur)", value:pct(cvrNow), w:relDelta(cvrNow,cvrBase), y:relDelta(cvrNow,cvrYoy) },
+    { label:"Purchases", value:fmtInt(cur.purchase), w:relDelta(cur.purchase,baseW.purchase), y:relDelta(cur.purchase,yy.purchase) },
+    { label:"ATC rate", value:pct(cur.atc/Math.max(cur.sessions,1)), w:relDelta(cur.atc/Math.max(cur.sessions,1), baseW.atc/Math.max(baseW.sessions,1)), y:relDelta(cur.atc/Math.max(cur.sessions,1), yy.atc/Math.max(yy.sessions,1)) },
+  ];
+  document.getElementById("kpis").innerHTML = defs.map(k=>{
+    const cls = k.w===null? "" : k.w > 0.02 ? "kpi-up" : k.w < -0.02 ? "kpi-down" : "";
+    return `<div class="kpi ${cls}">
+      <div class="kpi-label">${k.label}</div>
+      <div class="kpi-value">${k.value}</div>
+      <div class="kpi-delta"><span class="${deltaCls(k.w)}">WoW ${fmtSigned(k.w)}</span> &nbsp;<span class="${deltaCls(k.y)}">YoY ${fmtSigned(k.y)}</span></div>
+    </div>`;
+  }).join("");
+}
+
+function renderFunnelStrip(cur, baseW, yy, base){
+  const moves = STEP_DEFS.map((def,i)=>({ idx:i+1, d: relDelta(stepCR(cur,def), stepCR(base,def)) }));
+  const worst = moves.reduce((w,m)=> (m.d!==null && (!w || m.d<w.d)) ? m : w, null);
+  const best  = moves.reduce((b,m)=> (m.d!==null && (!b || m.d>b.d)) ? m : b, null);
+  const bnIdx = worst && worst.d < -0.05 ? worst.idx : -1;
+  const winIdx = best && best.d > 0.05 ? best.idx : -1;
+  const steps = [
+    { label:"Sessions", val:cur.sessions, w:relDelta(cur.sessions,baseW.sessions), y:relDelta(cur.sessions,yy.sessions) },
+    { label:"Add to cart", val:cur.atc, w:relDelta(cur.atc,baseW.atc), y:relDelta(cur.atc,yy.atc) },
+    { label:"Checkout", val:cur.checkout, w:relDelta(cur.checkout,baseW.checkout), y:relDelta(cur.checkout,yy.checkout) },
+    { label:"Purchase", val:cur.purchase, w:relDelta(cur.purchase,baseW.purchase), y:relDelta(cur.purchase,yy.purchase) },
+  ];
+  document.getElementById("funnelStrip").innerHTML = steps.map((s,i)=>{
+    const cls = ["funnel-step"];
+    if (i===bnIdx) cls.push("bottleneck"); else if (i===winIdx && winIdx!==bnIdx) cls.push("win");
+    const tag = i===bnIdx ? " (bottleneck)" : (i===winIdx && winIdx!==bnIdx ? " (win)" : "");
+    return `<div class="${cls.join(' ')}">
+      <div class="step-label">${s.label}${tag}</div>
+      <div class="step-val">${fmtInt(s.val)}</div>
+      <div class="step-delta ${deltaCls(s.w)}">WoW ${fmtSigned(s.w)}</div>
+      <div class="step-yoy"><span class="${deltaCls(s.y)}">YoY ${fmtSigned(s.y)}</span></div>
+    </div>`;
+  }).join("");
+}
+
+function asMap(rows){ const m={}; for (const r of rows) m[r[0]] = { sessions:+r[1], atc:+r[2], checkout:+r[3], purchase:+r[4] }; return m; }
+function renderSplitTable(elId, dimLabel, curRows, prevRows, only){
+  const curM = asMap(curRows), prevM = asMap(prevRows);
+  const keys = only ? only.filter(k=>curM[k]) : curRows.map(r=>r[0]).filter(k=>curM[k].sessions>100);
+  const out = [];
+  let html = `<tr><th>${dimLabel}</th><th>Sessions</th><th>ATC %</th><th>CVR</th></tr>`;
+  for (const k of keys){
+    const c = curM[k], p = prevM[k];
+    const atcR = c.sessions? c.atc/c.sessions:0, cvr = c.sessions? c.purchase/c.sessions:0;
+    const pAtcR = p && p.sessions? p.atc/p.sessions:null, pCvr = p && p.sessions? p.purchase/p.sessions:null;
+    const dS = p? relDelta(c.sessions,p.sessions):null, dA = pAtcR!==null? relDelta(atcR,pAtcR):null, dC = pCvr!==null? relDelta(cvr,pCvr):null;
+    out.push({ name:k, sessions:c.sessions, cvr, dCvr:dC });
+    html += `<tr><td>${k}</td>
+      <td>${fmtInt(c.sessions)}<span class="d ${deltaCls(dS)}">${fmtSigned(dS)}</span></td>
+      <td>${pct(atcR,1)}<span class="d ${deltaCls(dA)}">${fmtSigned(dA)}</span></td>
+      <td>${pct(cvr)}<span class="d ${deltaCls(dC)}">${fmtSigned(dC)}</span></td></tr>`;
+  }
+  document.getElementById(elId).innerHTML = html;
+  return out;
+}
+
+function worstSegmentForStep(curRows, prevRows, def, minShare=0.05){
+  const curM = asMap(curRows), prevM = asMap(prevRows);
+  const total = Object.values(curM).reduce((a,v)=>a+v.sessions,0);
+  let worst = null;
+  for (const k of Object.keys(curM)){
+    const c = curM[k], p = prevM[k];
+    if (!p || c.sessions/total < minShare) continue;
+    const d = relDelta(stepCR(c,def), stepCR(p,def));
+    if (d!==null && (!worst || d < worst.d)) worst = { name:k, d, sessions:c.sessions };
+  }
+  return worst;
+}
+function worstStepForSegment(c, p){
+  let worst = null;
+  for (const def of STEP_DEFS){
+    const d = relDelta(stepCR(c,def), stepCR(p,def));
+    if (d!==null && (!worst || d < worst.d)) worst = { def, d, cur:stepCR(c,def), prev:stepCR(p,def) };
+  }
+  return worst;
+}
+
+const AOV = 100; // £
+function renderTopTests(){
+  const A = SNAPSHOT.cuts.all;
+  const today = new Date(SNAPSHOT.bakedAt + "T12:00:00");
+  const yest = addDays(today,-1);
+  const curFrom = qd(addDays(yest,-6)), curTo = qd(yest);
+  const baseFrom = qd(addDays(yest,-34)), baseTo = qd(addDays(yest,-7));
+  const yoyFrom = qd(addDays(addDays(yest,-6),-364)), yoyTo = qd(addDays(yest,-364));
+  const cur = sumRows(A.daily, curFrom, curTo);
+  const base = sumRows(A.daily, baseFrom, baseTo);
+  const yy = sumRows(A.yoy, yoyFrom, yoyTo);
+  const annualValue = cur.purchase * 52 * AOV;
+
+  const cands = [];
+
+  // 1) Funnel-step candidates: gap vs 4-week baseline AND vs last year
+  for (const def of STEP_DEFS){
+    const cv = stepCR(cur,def), bv = stepCR(base,def), yv = stepCR(yy,def);
+    const dW = relDelta(cv,bv), dY = relDelta(cv,yv);
+    const worst = Math.min(dW??0, dY??0);
+    let impact, why;
+    if (worst < -0.02){
+      impact = Math.min(Math.abs(worst), 0.5) * annualValue;
+      const startDate = findChangeDate(A.daily, def, bv);
+      const vs = (dY!==null && dY < (dW??0)) ? `${fmtSigned(dY)} vs last year` : `${fmtSigned(dW)} vs 4-wk avg`;
+      why = `${def.label} now ${pct(cv,1)} — ${vs}` + (startDate? `; drop began ~${fmtDate(startDate)}` : ``);
+    } else {
+      impact = 0.025 * annualValue;
+      why = `${def.label} stable at ${pct(cv,1)} — no decline; proactive lift opportunity`;
+    }
+    const devW = worstSegmentForStep(A.devCur, A.devPrev, def);
+    const srcW = worstSegmentForStep(A.srcCur, A.srcPrev, def);
+    let where = [];
+    if (devW && devW.d < -0.03) where.push(`worst device: <b>${devW.name}</b> (${fmtSigned(devW.d)} WoW)`);
+    if (srcW && srcW.d < -0.03) where.push(`worst source: <b>${srcW.name}</b> (${fmtSigned(srcW.d)} WoW)`);
+    cands.push({ title:`${def.area} test`, impact, why, where: where.join(" &middot; "), tests: EXAMPLE_TESTS[def.key] });
+  }
+
+  // 2) Mobile divergence
+  const devCurM = asMap(A.devCur), devPrevM = asMap(A.devPrev);
+  const mob = devCurM["mobile"], mobP = devPrevM["mobile"], desk = devCurM["desktop"], deskP = devPrevM["desktop"];
+  if (mob && mobP && desk && deskP){
+    const mD = relDelta(mob.sessions? mob.purchase/mob.sessions:0, mobP.sessions? mobP.purchase/mobP.sessions:0);
+    const dD = relDelta(desk.sessions? desk.purchase/desk.sessions:0, deskP.sessions? deskP.purchase/deskP.sessions:0);
+    if (mD!==null && dD!==null && (mD - dD) < -0.08){
+      const ws = worstStepForSegment(mob, mobP);
+      let srcLine = "";
+      if (SNAPSHOT.mobileSrc && ws){
+        const sW = worstSegmentForStep(SNAPSHOT.mobileSrc.cur, SNAPSHOT.mobileSrc.prev, ws.def);
+        if (sW) srcLine = ` &middot; worst source within mobile: <b>${sW.name}</b> (${fmtSigned(sW.d)} WoW)`;
+      }
+      cands.push({
+        title:"Mobile experience test",
+        impact: Math.min(Math.abs(mD - dD),0.5) * mob.purchase * 52 * AOV,
+        why:`Mobile CVR ${fmtSigned(mD)} WoW vs desktop ${fmtSigned(dD)} — mobile-specific issue, often a release bug rather than behaviour`,
+        where: (ws? `where in funnel: <b>${ws.def.label}</b> (${ws.def.area}), mobile ${pct(ws.prev,1)} &rarr; ${pct(ws.cur,1)}` : "") + srcLine,
+        tests: EXAMPLE_TESTS.device });
+    }
+  }
+
+  // 3) Big market with CVR drop
+  const ctryCurM = asMap(A.ctryCur), ctryPrevM = asMap(A.ctryPrev);
+  const totalSess = Object.values(ctryCurM).reduce((a,v)=>a+v.sessions,0);
+  for (const k of Object.keys(ctryCurM)){
+    const c = ctryCurM[k], p = ctryPrevM[k];
+    if (!p || c.sessions/totalSess < 0.05) continue;
+    const d = relDelta(c.sessions? c.purchase/c.sessions:0, p.sessions? p.purchase/p.sessions:0);
+    if (d!==null && d < -0.12){
+      cands.push({
+        title:`${k} market test`,
+        impact: Math.min(Math.abs(d),0.5) * c.purchase * 52 * AOV,
+        why:`${k} CVR ${fmtSigned(d)} WoW with ${pct(c.sessions/totalSess,0)} of traffic`,
+        where:`where: full-funnel for ${k} — check shipping, duties, payment methods first`,
+        tests: EXAMPLE_TESTS.geo });
+    }
+  }
+
+  cands.sort((a,b)=>b.impact-a.impact);
+  document.getElementById("testIdeas").innerHTML = cands.slice(0,3).map((c,i)=>{
+    const prio = i===0? ["priority-high","#1"] : i===1? ["priority-med","#2"] : ["priority-low","#3"];
+    return `<div class="dd-test-card">
+      <div style="display:flex; align-items:baseline; gap:8px; margin-bottom:6px; flex-wrap:wrap;">
+        <span class="priority-pill ${prio[0]}">${prio[1]}</span>
+        <strong>${c.title}</strong>
+        <span style="margin-left:auto; color:#065f46; font-weight:700;">~£${fmtInt(c.impact)} / yr</span>
+      </div>
+      <div style="font-size:12px; color:#4b5563; margin-bottom:2px;">${c.why}</div>
+      ${c.where? `<div class="attrib">${c.where}</div>` : ``}
+      <div style="font-size:12px;">Try: ${c.tests.join(" &middot; ")}</div>
+    </div>`;
+  }).join("");
+}
+
+renderSrcBtns();
+render();
+renderTopTests();
+</script>
+</body>
+</html>
