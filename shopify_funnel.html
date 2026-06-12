@@ -25,7 +25,22 @@
   .kpi-value { font-size: 22px; font-weight: 700; margin-top: 4px; letter-spacing: -0.5px; color: #111827; }
   .kpi-delta { font-size: 12px; margin-top: 4px; font-weight: 500; }
   .section-title { font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.4px; margin: 14px 0 6px 0; }
-  .funnel-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin: 10px 0 16px 0; }
+  .verdict { border: 1px solid #e5e7eb; border-radius: 10px; padding: 14px 16px; margin: 10px 0 14px 0; background: #fafafa; }
+  .verdict-tag { display: inline-block; padding: 3px 10px; border-radius: 5px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+  .verdict-good { background: #dcfce7; color: #14532d; }
+  .verdict-bad { background: #fee2e2; color: #7f1d1d; }
+  .verdict-neutral { background: #e5e7eb; color: #374151; }
+  .verdict h2 { font-size: 15px; margin: 0 0 4px 0; font-weight: 600; line-height: 1.45; }
+  .verdict .v-line { font-size: 12.5px; color: #374151; margin-top: 5px; line-height: 1.5; }
+  .verdict .v-action { font-size: 12.5px; margin-top: 7px; }
+  .verdict .v-action a { color: #2456a6; font-weight: 600; }
+  .funnel-strip { display: grid; grid-template-columns: 1fr 58px 1fr 58px 1fr 58px 1fr; gap: 4px; align-items: stretch; margin: 10px 0 6px 0; }
+  .funnel-arrow { display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+  .funnel-arrow .glyph { color: #9ca3af; font-size: 13px; line-height: 1; }
+  .funnel-arrow .cr { font-size: 13px; font-weight: 700; margin-top: 2px; }
+  .funnel-arrow .cr-delta { font-size: 10px; margin-top: 1px; }
+  .funnel-diagnosis { font-size: 12.5px; color: #7f1d1d; background: #fef2f2; border: 1px solid #fecaca; border-radius: 6px; padding: 8px 12px; margin: 4px 0 14px 0; line-height: 1.5; }
+  .step-why { font-size: 11px; margin-top: 4px; color: #b91c1c; line-height: 1.35; }
   .funnel-step { border: 1px solid #e5e7eb; border-radius: 6px; padding: 8px 10px; }
   .funnel-step .step-label { color: #6b7280; font-size: 11px; }
   .funnel-step .step-val { font-size: 16px; font-weight: 600; margin-top: 2px; }
@@ -45,7 +60,7 @@
   td .d { font-size: 11px; margin-left: 6px; }
   .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
   @media (max-width: 900px){ .grid2 { grid-template-columns: 1fr; } }
-  @media (max-width: 760px){ .kpis { grid-template-columns: repeat(2,1fr); } .funnel-strip { grid-template-columns: repeat(2,1fr); } }
+  @media (max-width: 760px){ .kpis { grid-template-columns: repeat(2,1fr); } .funnel-strip { grid-template-columns: repeat(2,1fr); } .funnel-arrow { display: none; } }
   .dd-test-card { border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px 14px; margin-bottom: 8px; background: #fff; }
   .priority-pill { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; }
   .priority-high { background: #fee2e2; color: #991b1b; }
@@ -65,16 +80,19 @@
 <div class="toggle-group" id="srcBtns"><span class="label">Source</span></div>
 
 <div id="app">
+  <div class="verdict" id="verdict"></div>
+
+  <div class="section-title">The funnel — last 7 days</div>
+  <div class="funnel-strip" id="funnelStrip"></div>
+  <div id="funnelDiagnosis"></div>
+
   <div class="kpis" id="kpis"></div>
 
-  <div class="section-title">Funnel snapshot — last 7 full days (WoW vs 4-week avg)</div>
-  <div class="funnel-strip" id="funnelStrip"></div>
-
-  <div class="section-title">Trend (last 35 days)</div>
+  <div class="section-title">Daily trend — last 35 days</div>
   <div class="metric-selector" id="metricPills">
     <span class="label">Show:</span>
     <div class="pill" data-metric="1">Sessions</div>
-    <div class="pill" data-metric="2">ATC</div>
+    <div class="pill" data-metric="2">Add to cart</div>
     <div class="pill" data-metric="3">Checkout</div>
     <div class="pill active" data-metric="4">Purchase</div>
   </div>
@@ -82,23 +100,23 @@
 
   <div class="grid2">
     <div id="sourceBlock">
-      <div class="section-title" id="sourceTitle">By source (7d, WoW)</div>
+      <div class="section-title" id="sourceTitle">By source — last 7 days, change vs the week before</div>
       <table id="sourceTable"></table>
     </div>
     <div>
-      <div class="section-title">By device (7d, WoW)</div>
+      <div class="section-title">By device — last 7 days, change vs the week before</div>
       <table id="deviceTable"></table>
     </div>
   </div>
-  <div class="section-title">Top countries (7d, WoW)</div>
+  <div class="section-title">Top countries — last 7 days, change vs the week before</div>
   <table id="countryTable"></table>
 
   <div id="cvrBlock" style="display:none;">
-    <div class="section-title">Channel CVR — last 90 days, GA4 (all traffic, fixed regardless of filters)</div>
+    <div class="section-title">How each marketing channel converts — last 90 days (GA4, always all traffic)</div>
     <table id="cvrTable"></table>
   </div>
 
-  <div class="section-title">Top 3 tests this week — ranked by £ impact (all traffic, fixed regardless of filters)</div>
+  <div class="section-title" id="testsTitle">Top 3 tests this week — ranked by estimated £ impact (always all traffic)</div>
   <div id="testIdeas"></div>
 
   <div class="footer-note" id="notes"></div>
@@ -111,8 +129,8 @@ const SNAPSHOT = {"bakedAt":"2026-06-12","store":"Oh Polly UK","cuts":{"all":{"d
 const SOURCES = ["all","direct","search","social"];
 const STEP_LABELS = ["", "Sessions", "Add to cart", "Checkout", "Purchase"];
 const STEP_DEFS = [
-  { key:"s2a", label:"Sessions → ATC", num:2, den:1, area:"PDP / product discovery" },
-  { key:"a2c", label:"ATC → Checkout", num:3, den:2, area:"Cart" },
+  { key:"s2a", label:"Sessions → Add to cart", num:2, den:1, area:"PDP / product discovery" },
+  { key:"a2c", label:"Add to cart → Checkout", num:3, den:2, area:"Cart" },
   { key:"c2p", label:"Checkout → Purchase", num:4, den:3, area:"Checkout" },
 ];
 const EXAMPLE_TESTS = {
@@ -215,18 +233,19 @@ function render(){
 
   document.getElementById("storeName").textContent = "— " + SNAPSHOT.store;
   document.getElementById("bakedBadge").textContent = "Data to " + fmtDate(qd(curTo)) + " · updates Mondays";
-  const srcLabel = activeSource==="all" ? "" : ` · Source: ${activeSource}`;
+  const srcLabel = activeSource==="all" ? "" : ` (${activeSource} traffic only)`;
   document.getElementById("windowLabel").textContent =
-    `${qd(curFrom)} → ${qd(curTo)}${srcLabel} · WoW vs trailing 4-week avg · YoY vs ${qd(yoyFrom)} → ${qd(yoyTo)} · Source: Shopify (weekly snapshot)`;
+    `Covers ${fmtDate(qd(curFrom))} – ${fmtDate(qd(curTo))}${srcLabel}. Changes are shown against the average week over the previous four weeks ("vs recent avg") and against the same week last year ("vs last year"). Shopify data, refreshed every Monday.`;
 
+  renderVerdict(cur, baseW, yy, base, cut);
   renderKpis(cur, baseW, yy);
-  renderFunnelStrip(cur, baseW, yy, base);
+  renderFunnelStrip(cur, baseW, yy, base, cut);
   trendRows = cut.daily;
   try { renderTrend(); } catch(e){ document.querySelector(".chart-container").innerHTML = '<div style="padding:20px;color:#6b7280;font-size:12px;">Chart unavailable — numbers above are unaffected.</div>'; }
   // When a source filter is active, the whole page shows ONLY that source's traffic.
   // The all-sources comparison table is replaced by a clear filter notice to avoid mixed signals.
   if (activeSource === "all"){
-    document.getElementById("sourceTitle").textContent = "By source (7d, WoW)";
+    document.getElementById("sourceTitle").textContent = "By source — last 7 days, change vs the week before";
     renderSplitTable("sourceTable", "Source", SNAPSHOT.cuts.all.srcCur, SNAPSHOT.cuts.all.srcPrev, null);
   } else {
     document.getElementById("sourceTitle").textContent = "Active filter";
@@ -240,7 +259,7 @@ function render(){
   renderSplitTable("countryTable", "Country", cut.ctryCur, cut.ctryPrev, null);
 
   document.getElementById("notes").innerHTML =
-    `Weekly snapshot of Shopify data (ShopifyQL sessions), baked ${fmtDate(SNAPSHOT.bakedAt)}. Funnel: Sessions &rarr; ATC &rarr; Checkout &rarr; Purchase. ` +
+    `Weekly snapshot of Shopify data, taken ${fmtDate(SNAPSHOT.bakedAt)}. Funnel: Sessions &rarr; Add to cart &rarr; Checkout &rarr; Purchase. ` +
     `&nbsp;&middot;&nbsp; <strong>Source caveat:</strong> Shopify's referrer classification is cruder than GA4 channels &mdash; ad-driven traffic largely lands in &lsquo;direct&rsquo;/&lsquo;social&rsquo;. Use sources for movement, GA4 for channel mix. ` +
     `&nbsp;&middot;&nbsp; <strong>Consent caveat:</strong> Shopify sees traffic GA4 cannot (GDPR consent hides 20&ndash;40% of GA4 UK traffic) &mdash; numbers here run higher than the GA4 dashboard by design. ` +
     `&nbsp;&middot;&nbsp; Revenue-at-risk estimates assume AOV £100. &lsquo;Drop began&rsquo; dates are estimates from daily step-conversion vs the 4-week baseline.`;
@@ -252,43 +271,132 @@ function renderKpis(cur, baseW, yy){
   const cvrYoy = yy.sessions? yy.purchase/yy.sessions : 0;
   const defs = [
     { label:"Sessions", value:fmtInt(cur.sessions), w:relDelta(cur.sessions,baseW.sessions), y:relDelta(cur.sessions,yy.sessions) },
-    { label:"CVR (Sess→Pur)", value:pct(cvrNow), w:relDelta(cvrNow,cvrBase), y:relDelta(cvrNow,cvrYoy) },
+    { label:"Conversion rate (session → purchase)", value:pct(cvrNow), w:relDelta(cvrNow,cvrBase), y:relDelta(cvrNow,cvrYoy) },
     { label:"Purchases", value:fmtInt(cur.purchase), w:relDelta(cur.purchase,baseW.purchase), y:relDelta(cur.purchase,yy.purchase) },
-    { label:"ATC rate", value:pct(cur.atc/Math.max(cur.sessions,1)), w:relDelta(cur.atc/Math.max(cur.sessions,1), baseW.atc/Math.max(baseW.sessions,1)), y:relDelta(cur.atc/Math.max(cur.sessions,1), yy.atc/Math.max(yy.sessions,1)) },
+    { label:"Add-to-cart rate", value:pct(cur.atc/Math.max(cur.sessions,1)), w:relDelta(cur.atc/Math.max(cur.sessions,1), baseW.atc/Math.max(baseW.sessions,1)), y:relDelta(cur.atc/Math.max(cur.sessions,1), yy.atc/Math.max(yy.sessions,1)) },
   ];
   document.getElementById("kpis").innerHTML = defs.map(k=>{
     const cls = k.w===null? "" : k.w > 0.02 ? "kpi-up" : k.w < -0.02 ? "kpi-down" : "";
     return `<div class="kpi ${cls}">
       <div class="kpi-label">${k.label}</div>
       <div class="kpi-value">${k.value}</div>
-      <div class="kpi-delta"><span class="${deltaCls(k.w)}">WoW ${fmtSigned(k.w)}</span> &nbsp;<span class="${deltaCls(k.y)}">YoY ${fmtSigned(k.y)}</span></div>
+      <div class="kpi-delta"><span class="${deltaCls(k.w)}">${fmtSigned(k.w)} vs recent avg</span> &nbsp;<span class="${deltaCls(k.y)}">${fmtSigned(k.y)} vs last year</span></div>
     </div>`;
   }).join("");
 }
 
-function renderFunnelStrip(cur, baseW, yy, base){
+// Worst funnel step vs the 4-week baseline, with the segment most responsible.
+// Shared by the verdict block, the funnel hero and the red-flag hints.
+function weakestLink(cur, base, cut){
+  let worst = null;
+  for (const def of STEP_DEFS){
+    const d = relDelta(stepCR(cur,def), stepCR(base,def));
+    if (d!==null && (!worst || d < worst.d)) worst = { def, d, cv:stepCR(cur,def) };
+  }
+  if (!worst) return null;
+  worst.startDate = findChangeDate(cut.daily, worst.def, stepCR(base, worst.def));
+  worst.devW = worstSegmentForStep(cut.devCur, cut.devPrev, worst.def);
+  worst.srcW = (activeSource==="all") ? worstSegmentForStep(SNAPSHOT.cuts.all.srcCur, SNAPSHOT.cuts.all.srcPrev, worst.def) : null;
+  return worst;
+}
+function segmentHint(wk){
+  const bits = [];
+  if (wk.devW && wk.devW.d < -0.03) bits.push(`worst on ${wk.devW.name} (${fmtSigned(wk.devW.d)} vs the week before)`);
+  if (wk.srcW && wk.srcW.d < -0.03) bits.push(`worst from ${wk.srcW.name} traffic (${fmtSigned(wk.srcW.d)} vs the week before)`);
+  return bits.join("; ");
+}
+function describeDelta(d, vs){
+  if (d===null) return `no comparison available ${vs}`;
+  if (Math.abs(d) < 0.005) return `level ${vs}`;
+  return `${d>0?"up":"down"} ${(100*Math.abs(d)).toFixed(1)}% ${vs}`;
+}
+
+function renderVerdict(cur, baseW, yy, base, cut){
+  const dW = relDelta(cur.purchase, baseW.purchase);
+  const dY = relDelta(cur.purchase, yy.purchase);
+  let tag, cls;
+  if ((dW??0) < -0.05 || (dY??0) < -0.10){ tag = "Concern"; cls = "verdict-bad"; }
+  else if ((dW??0) > 0.05 && (dY??0) >= 0){ tag = "Good week"; cls = "verdict-good"; }
+  else { tag = "Steady"; cls = "verdict-neutral"; }
+
+  const headline = `${fmtInt(cur.purchase)} purchases last week — ${describeDelta(dW, "on a typical recent week")}, ${describeDelta(dY, "on the same week last year")}.`;
+
+  const wk = weakestLink(cur, base, cut);
+  let weakLine;
+  if (wk && wk.d < -0.02){
+    const hint = segmentHint(wk);
+    weakLine = `Weakest link: <b>${wk.def.label}</b>, now ${pct(wk.cv,1)} (${fmtSigned(wk.d)} vs recent avg)`
+      + (hint ? ` — ${hint}` : "")
+      + (wk.startDate ? `. The slide started around ${fmtDate(wk.startDate)}.` : ".");
+  } else {
+    weakLine = `No funnel step is meaningfully below its recent norm.`;
+  }
+
+  const topTest = (typeof topCands !== "undefined" && topCands.length) ? topCands[0] : null;
+  let action = "";
+  if (topTest){
+    const matchesWeak = wk && topTest.title === `${wk.def.area} test`;
+    action = matchesWeak
+      ? `What to do about it: this week's weak link is exactly what <a href="#testIdeas">Test #1 — ${topTest.title}</a> targets (est. ~£${fmtInt(topTest.impact)}/yr).`
+      : `Biggest £ opportunity this week: <a href="#testIdeas">Test #1 — ${topTest.title}</a> (est. ~£${fmtInt(topTest.impact)}/yr) — see the test list below.`;
+  }
+
+  document.getElementById("verdict").innerHTML =
+    `<span class="verdict-tag ${cls}">${tag}</span>` +
+    `<h2>${headline}</h2>` +
+    `<div class="v-line">${weakLine}</div>` +
+    (action ? `<div class="v-line v-action">${action}</div>` : "");
+}
+
+function renderFunnelStrip(cur, baseW, yy, base, cut){
   const moves = STEP_DEFS.map((def,i)=>({ idx:i+1, d: relDelta(stepCR(cur,def), stepCR(base,def)) }));
   const worst = moves.reduce((w,m)=> (m.d!==null && (!w || m.d<w.d)) ? m : w, null);
   const best  = moves.reduce((b,m)=> (m.d!==null && (!b || m.d>b.d)) ? m : b, null);
   const bnIdx = worst && worst.d < -0.05 ? worst.idx : -1;
   const winIdx = best && best.d > 0.05 ? best.idx : -1;
+  const wk = weakestLink(cur, base, cut);
   const steps = [
     { label:"Sessions", val:cur.sessions, w:relDelta(cur.sessions,baseW.sessions), y:relDelta(cur.sessions,yy.sessions) },
     { label:"Add to cart", val:cur.atc, w:relDelta(cur.atc,baseW.atc), y:relDelta(cur.atc,yy.atc) },
     { label:"Checkout", val:cur.checkout, w:relDelta(cur.checkout,baseW.checkout), y:relDelta(cur.checkout,yy.checkout) },
     { label:"Purchase", val:cur.purchase, w:relDelta(cur.purchase,baseW.purchase), y:relDelta(cur.purchase,yy.purchase) },
   ];
-  document.getElementById("funnelStrip").innerHTML = steps.map((s,i)=>{
+  const stepCell = (s,i) => {
     const cls = ["funnel-step"];
     if (i===bnIdx) cls.push("bottleneck"); else if (i===winIdx && winIdx!==bnIdx) cls.push("win");
-    const tag = i===bnIdx ? " (bottleneck)" : (i===winIdx && winIdx!==bnIdx ? " (win)" : "");
+    const tag = i===bnIdx ? " (bottleneck)" : (i===winIdx && winIdx!==bnIdx ? " (doing well)" : "");
+    const why = (i===bnIdx && wk && wk.def===STEP_DEFS[i-1]) ? segmentHint(wk) : "";
     return `<div class="${cls.join(' ')}">
       <div class="step-label">${s.label}${tag}</div>
       <div class="step-val">${fmtInt(s.val)}</div>
-      <div class="step-delta ${deltaCls(s.w)}">WoW ${fmtSigned(s.w)}</div>
-      <div class="step-yoy"><span class="${deltaCls(s.y)}">YoY ${fmtSigned(s.y)}</span></div>
+      <div class="step-delta ${deltaCls(s.w)}">${fmtSigned(s.w)} vs recent avg</div>
+      <div class="step-yoy"><span class="${deltaCls(s.y)}">${fmtSigned(s.y)} vs last year</span></div>
+      ${why ? `<div class="step-why">${why}</div>` : ``}
     </div>`;
-  }).join("");
+  };
+  const arrowCell = (i) => { // conversion from step i to step i+1
+    const def = STEP_DEFS[i];
+    const cv = stepCR(cur,def), d = relDelta(cv, stepCR(base,def));
+    return `<div class="funnel-arrow">
+      <div class="glyph">&rarr;</div>
+      <div class="cr">${pct(cv,1)}</div>
+      <div class="cr-delta ${deltaCls(d)}">${fmtSigned(d)}</div>
+    </div>`;
+  };
+  document.getElementById("funnelStrip").innerHTML =
+    steps.map((s,i)=> stepCell(s,i) + (i<3 ? arrowCell(i) : "")).join("");
+
+  // One-line diagnosis under the bottleneck step
+  const diag = document.getElementById("funnelDiagnosis");
+  if (bnIdx > 0 && wk){
+    const hint = segmentHint(wk);
+    diag.innerHTML = `<div class="funnel-diagnosis"><b>Why:</b> the drop sits at <b>${wk.def.label}</b> (${wk.def.area}), now ${pct(wk.cv,1)} of the previous step`
+      + (hint ? ` — ${hint}` : "")
+      + (wk.startDate ? `. It began around ${fmtDate(wk.startDate)} — check releases, app changes or promos from that date first.` : ".");
+    diag.innerHTML += `</div>`;
+  } else {
+    diag.innerHTML = "";
+  }
 }
 
 function asMap(rows){ const m={}; for (const r of rows) m[r[0]] = { sessions:+r[1], atc:+r[2], checkout:+r[3], purchase:+r[4] }; return m; }
@@ -296,7 +404,7 @@ function renderSplitTable(elId, dimLabel, curRows, prevRows, only){
   const curM = asMap(curRows), prevM = asMap(prevRows);
   const keys = only ? only.filter(k=>curM[k]) : curRows.map(r=>r[0]).filter(k=>curM[k].sessions>100);
   const out = [];
-  let html = `<tr><th>${dimLabel}</th><th>Sessions</th><th>ATC %</th><th>CVR</th></tr>`;
+  let html = `<tr><th>${dimLabel}</th><th>Sessions</th><th>Add to cart %</th><th>Conversion</th></tr>`;
   for (const k of keys){
     const c = curM[k], p = prevM[k];
     const atcR = c.sessions? c.atc/c.sessions:0, cvr = c.sessions? c.purchase/c.sessions:0;
@@ -334,7 +442,7 @@ function worstStepForSegment(c, p){
 }
 
 const AOV = 100; // £
-function renderTopTests(){
+function buildTestCands(){
   const A = SNAPSHOT.cuts.all;
   const today = new Date(SNAPSHOT.bakedAt + "T12:00:00");
   const yest = addDays(today,-1);
@@ -357,8 +465,8 @@ function renderTopTests(){
     if (worst < -0.02){
       impact = Math.min(Math.abs(worst), 0.5) * annualValue;
       const startDate = findChangeDate(A.daily, def, bv);
-      const vs = (dY!==null && dY < (dW??0)) ? `${fmtSigned(dY)} vs last year` : `${fmtSigned(dW)} vs 4-wk avg`;
-      why = `${def.label} now ${pct(cv,1)} — ${vs}` + (startDate? `; drop began ~${fmtDate(startDate)}` : ``);
+      const vs = (dY!==null && dY < (dW??0)) ? `${fmtSigned(dY)} vs last year` : `${fmtSigned(dW)} vs recent avg`;
+      why = `${def.label} now ${pct(cv,1)} — ${vs}` + (startDate? `; drop began around ${fmtDate(startDate)}` : ``);
     } else {
       impact = 0.025 * annualValue;
       why = `${def.label} stable at ${pct(cv,1)} — no decline; proactive lift opportunity`;
@@ -366,8 +474,8 @@ function renderTopTests(){
     const devW = worstSegmentForStep(A.devCur, A.devPrev, def);
     const srcW = worstSegmentForStep(A.srcCur, A.srcPrev, def);
     let where = [];
-    if (devW && devW.d < -0.03) where.push(`worst device: <b>${devW.name}</b> (${fmtSigned(devW.d)} WoW)`);
-    if (srcW && srcW.d < -0.03) where.push(`worst source: <b>${srcW.name}</b> (${fmtSigned(srcW.d)} WoW)`);
+    if (devW && devW.d < -0.03) where.push(`worst device: <b>${devW.name}</b> (${fmtSigned(devW.d)} vs the week before)`);
+    if (srcW && srcW.d < -0.03) where.push(`worst source: <b>${srcW.name}</b> (${fmtSigned(srcW.d)} vs the week before)`);
     cands.push({ title:`${def.area} test`, impact, why, where: where.join(" &middot; "), tests: EXAMPLE_TESTS[def.key] });
   }
 
@@ -382,12 +490,12 @@ function renderTopTests(){
       let srcLine = "";
       if (SNAPSHOT.mobileSrc && ws){
         const sW = worstSegmentForStep(SNAPSHOT.mobileSrc.cur, SNAPSHOT.mobileSrc.prev, ws.def);
-        if (sW) srcLine = ` &middot; worst source within mobile: <b>${sW.name}</b> (${fmtSigned(sW.d)} WoW)`;
+        if (sW) srcLine = ` &middot; worst source within mobile: <b>${sW.name}</b> (${fmtSigned(sW.d)} vs the week before)`;
       }
       cands.push({
         title:"Mobile experience test",
         impact: Math.min(Math.abs(mD - dD),0.5) * mob.purchase * 52 * AOV,
-        why:`Mobile CVR ${fmtSigned(mD)} WoW vs desktop ${fmtSigned(dD)} — mobile-specific issue, often a release bug rather than behaviour`,
+        why:`Mobile conversion is ${fmtSigned(mD)} vs the week before while desktop is ${fmtSigned(dD)} — a mobile-specific issue, often a release bug rather than shopper behaviour`,
         where: (ws? `where in funnel: <b>${ws.def.label}</b> (${ws.def.area}), mobile ${pct(ws.prev,1)} &rarr; ${pct(ws.cur,1)}` : "") + srcLine,
         tests: EXAMPLE_TESTS.device });
     }
@@ -404,13 +512,19 @@ function renderTopTests(){
       cands.push({
         title:`${k} market test`,
         impact: Math.min(Math.abs(d),0.5) * c.purchase * 52 * AOV,
-        why:`${k} CVR ${fmtSigned(d)} WoW with ${pct(c.sessions/totalSess,0)} of traffic`,
+        why:`${k} conversion is ${fmtSigned(d)} vs the week before, and ${k} is ${pct(c.sessions/totalSess,0)} of all traffic`,
         where:`where: full-funnel for ${k} — check shipping, duties, payment methods first`,
         tests: EXAMPLE_TESTS.geo });
     }
   }
 
   cands.sort((a,b)=>b.impact-a.impact);
+  return cands;
+}
+
+let topCands = [];
+function renderTopTests(){
+  const cands = topCands;
   document.getElementById("testIdeas").innerHTML = cands.slice(0,3).map((c,i)=>{
     const prio = i===0? ["priority-high","#1"] : i===1? ["priority-med","#2"] : ["priority-low","#3"];
     return `<div class="dd-test-card">
@@ -451,6 +565,7 @@ function renderChannelCvr(){
   document.getElementById("cvrTable").innerHTML = html;
 }
 
+topCands = buildTestCands();
 renderSrcBtns();
 render();
 renderTopTests();
