@@ -73,6 +73,24 @@ with open(TEMPLATE) as f:
 if "__SNAPSHOT_JSON__" not in html:
     fail("share_template.html has no __SNAPSHOT_JSON__ placeholder")
 html = html.replace("__SNAPSHOT_JSON__", json.dumps(data, separators=(",", ":")))
+
+# Inline Chart.js so the dashboard needs no CDN (the office network blocks
+# cdn.jsdelivr.net, which was leaving "Chart unavailable" on every chart).
+CHART_BUNDLE = os.path.join(HERE, ".chartjs_bundle.js")
+CDN_TAG = ('<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js" '
+           'integrity="sha384-iU8HYtnGQ8Cy4zl7gbNMOhsDTTKX02BTXptVP/vqAWIaTfM7isw76iyZCsjL2eVi" '
+           'crossorigin="anonymous"></script>')
+if os.path.exists(CHART_BUNDLE):
+    with open(CHART_BUNDLE) as cf:
+        chartjs = cf.read()
+    if CDN_TAG in html:
+        html = html.replace(CDN_TAG, "<script>\n" + chartjs + "\n</script>")
+        print("Inlined Chart.js bundle — no CDN dependency.")
+    else:
+        print("WARNING: Chart.js CDN tag not found in template; charts may rely on the CDN.")
+else:
+    print("WARNING: .chartjs_bundle.js missing; charts will rely on the CDN.")
+
 with open(OUTPUT, "w") as f:
     f.write(html)
 size_kb = os.path.getsize(OUTPUT) // 1024
@@ -101,19 +119,33 @@ if not os.path.isdir(os.path.join(HERE, ".git")):
 # is deliberate — leaving it uncommitted let a `git pull --rebase` silently
 # reset it to an old version (regression, 24 Jun 2026). Never `git add .` here —
 # this folder contains credentials and 100MB+ data files.
-run(["git", "add", "--", "shopify_funnel.html", "share_template.html"])
+# Clear stale git locks first — a recurring gremlin on this repo that has
+# blocked the commit (and silently failed publishes). Safe for this single-user repo.
+for _lock in (".git/HEAD.lock", ".git/index.lock"):
+    _p = os.path.join(HERE, _lock)
+    if os.path.exists(_p):
+        try:
+            os.remove(_p); print(f"  cleared stale {_lock}")
+        except OSError:
+            pass
+run(["git", "add", "--", "shopify_funnel.html", "share_template.html", "build_share_funnel.py"])
 r = run(["git", "-c", "user.name=Funnel Bot", "-c", "user.email=funnel-bot@ohpolly.com",
          "commit", "-m", f"Weekly funnel bake — data to {data['bakedAt']}"])
+combined = r.stdout + r.stderr
 if r.returncode != 0:
-    if "nothing to commit" in (r.stdout + r.stderr):
-        print("No changes since last bake — nothing to push.")
-        sys.exit(0)
-    # A failed commit must NEVER be ignored — otherwise we push stale content
-    # while claiming success (this bit us on 12 Jun 2026: a stale .git lock file).
-    if "index.lock" in r.stderr or "HEAD.lock" in r.stderr:
+    if ("nothing to commit" in combined or "no changes added to commit" in combined
+            or "working tree clean" in combined):
+        # Files identical to the last bake — but an earlier commit may still be
+        # unpushed (a prior run committed, then failed to push). Do NOT exit here:
+        # fall through and push so the live site catches up.
+        print("No new changes to commit — pushing any unpushed commits…")
+    elif "index.lock" in combined or "HEAD.lock" in combined:
         fail(f"git commit failed due to a stale lock file. Delete .git/HEAD.lock and "
-             f".git/index.lock in the project folder, then re-run.\n{r.stderr[-500:]}")
-    fail(f"git commit failed — dashboard NOT updated:\n{r.stderr[-800:]}")
+             f".git/index.lock in the project folder, then re-run.\n{combined[-500:]}")
+    else:
+        # Print the FULL git output — it often goes to stdout, not stderr, which
+        # is why this previously failed with a blank message.
+        fail(f"git commit failed — dashboard NOT updated:\n{combined[-800:] or '(no git output)'}")
 
 r = run(["git", "push", push_url, "main"])
 if r.returncode != 0:
