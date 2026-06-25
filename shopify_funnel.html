@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Oh Polly — Weekly Funnel (Shopify)</title>
+<title>Oh Polly — Weekly Funnel</title>
 <script>
 /*!
  * Chart.js v4.5.0
@@ -22,960 +22,334 @@
 
 </script>
 <style>
-  :root { color-scheme: light; }
-  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0 auto; padding: 16px; color: #1d1d1f; background: #ffffff; font-size: 13px; line-height: 1.4; max-width: 1100px; }
-  h1 { font-size: 18px; margin: 0 0 4px 0; font-weight: 600; }
-  .subtitle { color: #6b7280; font-size: 12px; margin-bottom: 14px; }
-  .baked-badge { display:inline-block; background:#eef3fb; color:#2456a6; border-radius:4px; padding:2px 8px; font-size:11px; font-weight:600; margin-left:8px; vertical-align:middle; }
-  .toggle-group { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; }
-  .toggle-group .label { color: #6b7280; font-size: 11px; margin-right: 4px; font-weight: 600; min-width: 42px; }
-  .pill { padding: 5px 10px; border-radius: 5px; cursor: pointer; background: #f3f4f6; color: #4b5563; border: 1px solid transparent; font-size: 12px; font-weight: 500; user-select: none; }
-  .pill.active { background: #1d1d1f; color: #fff; }
-  .pill.disabled { background: #f9fafb; color: #d1d5db; cursor: not-allowed; position: relative; }
-  .pill.disabled:hover::after { content: attr(data-tooltip); position: absolute; bottom: 110%; left: 0; background: #1d1d1f; color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 11px; white-space: nowrap; z-index: 10; }
-  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 14px; margin-top: 8px; }
-  .kpi { border: 1px solid #d1d5db; border-radius: 8px; padding: 12px 14px; background: #fff; border-left: 4px solid #d1d5db; display: block; }
-  .kpi.kpi-up   { border-left-color: #047857; background: #f0fdf4; }
-  .kpi.kpi-down { border-left-color: #b91c1c; background: #fef2f2; }
-  .kpi-label { color: #6b7280; font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px; }
-  .kpi-value { font-size: 22px; font-weight: 700; margin-top: 4px; letter-spacing: -0.5px; color: #111827; }
-  .kpi-delta { font-size: 12px; margin-top: 4px; font-weight: 500; }
-  .section-title { font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.4px; margin: 14px 0 6px 0; }
-  .verdict { border: 1px solid #e5e7eb; border-radius: 10px; padding: 14px 16px; margin: 10px 0 14px 0; background: #fafafa; }
-  .verdict-tag { display: inline-block; padding: 3px 10px; border-radius: 5px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
-  .verdict-good { background: #dcfce7; color: #14532d; }
-  .verdict-bad { background: #fee2e2; color: #7f1d1d; }
-  .verdict-neutral { background: #e5e7eb; color: #374151; }
-  .verdict h2 { font-size: 15px; margin: 0 0 4px 0; font-weight: 600; line-height: 1.45; }
-  .verdict .v-line { font-size: 12.5px; color: #374151; margin-top: 5px; line-height: 1.5; }
-  .verdict .v-action { font-size: 12.5px; margin-top: 7px; }
-  .verdict .v-action a { color: #2456a6; font-weight: 600; }
-  .funnel-strip { display: grid; grid-template-columns: 1fr 58px 1fr 58px 1fr 58px 1fr; gap: 4px; align-items: stretch; margin: 10px 0 6px 0; }
-  .funnel-arrow { display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
-  .funnel-arrow .glyph { color: #9ca3af; font-size: 13px; line-height: 1; }
-  .funnel-arrow .cr { font-size: 13px; font-weight: 700; margin-top: 2px; }
-  .funnel-arrow .cr-delta { font-size: 10px; margin-top: 1px; }
-  .funnel-diagnosis { font-size: 12.5px; color: #7f1d1d; background: #fef2f2; border: 1px solid #fecaca; border-radius: 6px; padding: 8px 12px; margin: 4px 0 14px 0; line-height: 1.5; }
-  .step-why { font-size: 11px; margin-top: 4px; color: #b91c1c; line-height: 1.35; }
-  .funnel-step { border: 1px solid #e5e7eb; border-radius: 6px; padding: 8px 10px; }
-  .funnel-step .step-label { color: #6b7280; font-size: 11px; }
-  .funnel-step .step-val { font-size: 16px; font-weight: 600; margin-top: 2px; }
-  .funnel-step .step-delta { font-size: 11px; margin-top: 2px; }
-  .funnel-step .step-yoy { font-size: 11px; margin-top: 1px; color: #6b7280; }
-  .funnel-step.bottleneck { border-color: #b91c1c; background: #fef2f2; }
-  .funnel-step.win { border-color: #047857; background: #f0fdf4; }
-  .delta-up { color: #047857; }
-  .delta-down { color: #b91c1c; }
-  .delta-flat { color: #6b7280; }
-  .metric-selector { display: flex; gap: 4px; align-items: center; margin: -2px 0 8px 0; }
-  .metric-selector .label { color: #6b7280; font-size: 11px; margin-right: 4px; font-weight: 600; }
-  .chart-container { position: relative; height: 240px; margin: 6px 0 16px 0; }
-  table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
-  th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px; color: #6b7280; padding: 7px 10px; border-bottom: 1px solid #e5e7eb; font-weight: 600; }
-  td { padding: 7px 10px; border-bottom: 1px solid #f3f4f6; font-size: 12.5px; }
-  td .d { font-size: 11px; margin-left: 6px; }
-  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-  @media (max-width: 900px){ .grid2 { grid-template-columns: 1fr; } }
-  @media (max-width: 760px){ .kpis { grid-template-columns: repeat(2,1fr); } .funnel-strip { grid-template-columns: repeat(2,1fr); } .funnel-arrow { display: none; } }
-  .dd-test-card { border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px 14px; margin-bottom: 8px; background: #fff; }
-  .priority-pill { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; }
-  .priority-high { background: #fee2e2; color: #991b1b; }
-  .priority-med  { background: #fef9c3; color: #854d0e; }
-  .priority-low  { background: #e5e7eb; color: #4b5563; }
-  .dd-test-card strong { color: #1d1d1f; }
-  .dd-test-card .attrib { font-size: 12px; color: #4b5563; margin: 6px 0; padding: 8px 10px; background: #f9fafb; border-radius: 6px; line-height: 1.55; }
-  .dd-test-card .attrib b { color: #1d1d1f; }
-  .dd-test-empty { color: #6b7280; font-style: italic; }
-  .footer-note { font-size: 11px; color: #9ca3af; margin-top: 16px; padding-top: 10px; border-top: 1px solid #f3f4f6; }
-  #gate { position:fixed; inset:0; background:#fff; display:flex; align-items:center; justify-content:center; z-index:9999; }
-  #gate-box { text-align:center; }
-  #gate-box h2 { font-size:16px; font-weight:600; margin:0 0 16px; color:#1d1d1f; }
-  #gate-box input { padding:8px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; width:220px; outline:none; }
-  #gate-box input:focus { border-color:#1d1d1f; }
-  #gate-box button { display:block; margin:10px auto 0; padding:8px 24px; background:#1d1d1f; color:#fff; border:none; border-radius:6px; font-size:13px; font-weight:600; cursor:pointer; }
-  #gate-box .err { color:#b91c1c; font-size:12px; margin-top:8px; min-height:16px; }
+  :root{
+    --ink:#1a1418; --ink-2:#4a444a; --ink-3:#857e84; --line:#eee7ea;
+    --blush:#f7d9de; --blush-soft:#fdf3f5; --rose:#b14f6b; --rose-deep:#8c3b54;
+    --good:#0e6e48; --bad:#8c2433;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,sans-serif;
+    --serif:Georgia,"Times New Roman",serif;
+  }
+  *{box-sizing:border-box;}
+  body{font-family:var(--sans); color:var(--ink); background:#fff; margin:0 auto; max-width:1000px; padding:0 28px 64px; font-size:15px; line-height:1.62;}
+  #gate{position:fixed; inset:0; background:#fff; display:flex; align-items:center; justify-content:center; z-index:9999;}
+  #gate-box{text-align:center;}
+  #gate-box .oh{font-family:var(--serif); font-style:italic; font-size:30px;}
+  #gate-box .polly{font-size:16px; letter-spacing:7px; display:block; margin-bottom:18px;}
+  #gate-box input{padding:9px 13px; border:1px solid #d8cfd3; border-radius:7px; font-size:14px; width:230px; outline:none;}
+  #gate-box input:focus{border-color:var(--rose);}
+  #gate-box button{display:block; margin:11px auto 0; padding:9px 26px; background:var(--ink); color:#fff; border:none; border-radius:7px; font-size:13px; font-weight:600; cursor:pointer;}
+  #gate-box .err{color:var(--bad); font-size:12px; margin-top:8px; min-height:16px;}
+
+  header{display:flex; align-items:center; justify-content:space-between; padding:26px 0 16px; border-bottom:2px solid var(--blush);}
+  .logo .oh{font-family:var(--serif); font-style:italic; font-size:26px;}
+  .logo .polly{font-size:15px; letter-spacing:6px; font-weight:500;}
+  .hmeta{text-align:right;} .hmeta .t{font-size:14px; color:var(--ink-2);} .hmeta .d{font-size:12px; color:var(--ink-3);}
+  #freshness{margin:10px 0 0;}
+  .pill{display:inline-flex; align-items:center; gap:5px; border-radius:999px; padding:3px 10px; font-size:11px; font-weight:600; margin:0 6px 4px 0;}
+
+  section{padding:36px 0 4px;} section + section{border-top:3px solid var(--ink);}
+  .eyebrow{display:flex; align-items:center; gap:10px; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:1.5px; color:var(--ink-3); margin-bottom:3px;}
+  .eyebrow .num{color:var(--rose); font-weight:800;}
+  .lead{font-size:13.5px; color:var(--ink-2); margin:0 0 18px;}
+
+  .verdict{border:1px solid var(--line); border-left:4px solid var(--rose); border-radius:12px; background:var(--blush-soft); padding:18px 22px; margin-bottom:20px;}
+  .verdict .tag{display:inline-block; color:#fff; font-size:11px; font-weight:700; letter-spacing:.6px; text-transform:uppercase; padding:3px 11px; border-radius:6px; margin-bottom:10px; background:var(--rose);}
+  .verdict .tag.good{background:var(--good);} .verdict .tag.bad{background:var(--bad);}
+  .verdict h2{font-size:20px; line-height:1.4; font-weight:600; margin:0 0 6px;}
+  .verdict p{margin:0; font-size:14.5px; color:var(--ink-2);}
+  .verdict a{color:var(--rose-deep); font-weight:600;}
+
+  .cards4{display:grid; grid-template-columns:repeat(4,1fr); gap:14px;}
+  .icard{border:1px solid var(--line); border-radius:12px; padding:16px 16px 14px;}
+  .icard .label{font-size:11.5px; text-transform:uppercase; letter-spacing:.5px; color:var(--ink-3);}
+  .icard .big{font-size:30px; font-weight:700; letter-spacing:-1px; margin:5px 0 1px; line-height:1;}
+  .icard .big.u{box-shadow:inset 0 -9px 0 var(--blush);}
+  .icard .delta{font-size:12.5px; font-weight:600; margin-bottom:9px;}
+  .icard .so{font-size:13px; color:var(--ink-2); line-height:1.48; border-top:1px dashed var(--line); padding-top:9px;}
+  .up{color:var(--good);} .down{color:var(--bad);} .flat{color:var(--ink-3);}
+
+  .movers{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-top:6px;}
+  .mover{display:flex; gap:11px; align-items:flex-start; border:1px solid var(--line); border-radius:10px; padding:13px 15px;}
+  .mover .mk{font-size:15px; font-weight:700; line-height:1.2;}
+  .mover .mt{font-size:13.5px; color:var(--ink-2);} .mover .mt b{color:var(--ink);}
+  .mover.pos{border-left:3px solid var(--good); border-radius:0 10px 10px 0;} .mover.pos .mk{color:var(--good);}
+  .mover.neg{border-left:3px solid var(--bad); border-radius:0 10px 10px 0;} .mover.neg .mk{color:var(--bad);}
+
+  .funnel{display:grid; grid-template-columns:1fr auto 1fr auto 1fr auto 1fr; align-items:center; gap:6px; margin:6px 0 4px;}
+  .fstep{border:1px solid var(--line); border-radius:10px; padding:14px 12px; text-align:center; cursor:pointer; transition:all .12s; background:#fff;}
+  .fstep:hover{border-color:var(--rose);}
+  .fstep.sel{border-color:var(--rose); background:var(--blush-soft); box-shadow:0 0 0 3px var(--blush);}
+  .fstep .s-lab{font-size:12px; color:var(--ink-3);}
+  .fstep .s-val{font-size:21px; font-weight:700; margin-top:3px; letter-spacing:-.5px;}
+  .fstep .s-d{font-size:11px; margin-top:3px;}
+  .farrow{text-align:center; min-width:60px;} .farrow .cr{font-size:14px; font-weight:700;} .farrow .gl{color:#cdc7ca;}
+  #drill{border:1px solid var(--blush); background:var(--blush-soft); border-radius:12px; padding:16px 20px; margin:14px 0 22px;}
+  #drill .d-h{font-size:15px; font-weight:700;} #drill .d-cr{font-size:13px; color:var(--rose-deep); font-weight:600; margin:2px 0 8px;}
+  #drill p{margin:0 0 8px; font-size:14px; color:var(--ink-2);} #drill .d-act{font-size:13.5px;} #drill .d-act b{color:var(--rose-deep);}
+
+  .split2{display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-top:8px;}
+  .panel{border:1px solid var(--line); border-radius:12px; padding:16px 18px;}
+  .panel h3{font-size:13px; text-transform:uppercase; letter-spacing:.6px; color:var(--ink-3); margin:0 0 10px; font-weight:700;}
+  .bigrow{display:flex; gap:24px; align-items:baseline; margin-bottom:8px;}
+  .bigrow .v{font-size:26px; font-weight:700; letter-spacing:-.5px;} .bigrow .k{font-size:12px; color:var(--ink-3);}
+  .note{font-size:12.5px; color:var(--ink-2); line-height:1.5;} .note a{color:var(--rose-deep); font-weight:600;}
+
+  .dives{display:grid; grid-template-columns:repeat(2,1fr); gap:14px; margin-top:16px;}
+  .dive{border:1px solid var(--line); border-radius:12px; padding:16px 18px; cursor:pointer; transition:all .12s;}
+  .dive:hover{border-color:var(--rose); background:var(--blush-soft);}
+  .dive.sel-d{border-color:var(--rose); background:var(--blush-soft);}
+  .dive .d-top{display:flex; align-items:baseline; justify-content:space-between;}
+  .dive .d-name{font-size:15px; font-weight:600;} .dive .d-stat{font-size:20px; font-weight:700; letter-spacing:-.5px;}
+  .dive .d-teaser{font-size:13px; color:var(--ink-2); line-height:1.45; margin:6px 0 4px;} .dive .d-link{font-size:12.5px; font-weight:600; color:var(--rose);}
+  #diveDetail{margin-top:14px;}
+  #diveDetail .dd{border:1px solid var(--blush); background:var(--blush-soft); border-radius:12px; padding:16px 18px;}
+  #diveDetail h4{margin:0 0 3px; font-size:15px;} #diveDetail .sub{font-size:12.5px; color:var(--ink-3); margin-bottom:10px;}
+  #diveDetail table{width:100%; border-collapse:collapse; font-size:13px; background:#fff; border-radius:8px; overflow:hidden;}
+  #diveDetail th{text-align:left; font-size:10.5px; text-transform:uppercase; letter-spacing:.4px; color:var(--ink-3); padding:7px 9px; border-bottom:1px solid var(--line); font-weight:700;}
+  #diveDetail td{padding:7px 9px; border-bottom:1px solid var(--line);} #diveDetail td .d{font-size:11px; margin-left:5px;}
+  #diveDetail .cap{font-size:11.5px; color:var(--ink-3); padding-top:9px; line-height:1.5;}
+  .chart-box{position:relative; height:280px; margin:6px 0 4px; background:#fff; border-radius:8px; padding:8px;}
+  .foot{font-size:12px; color:var(--ink-3); margin-top:30px; padding-top:14px; border-top:1px solid var(--line); line-height:1.6;}
+  @media(max-width:780px){ .cards4,.movers,.split2,.dives{grid-template-columns:1fr;} .funnel{grid-template-columns:1fr 1fr;} .farrow{display:none;} }
 </style>
 </head>
 <body>
-<div id="gate">
-  <div id="gate-box">
-    <h2>Oh Polly — Weekly Funnel</h2>
-    <input type="password" id="gate-input" placeholder="Password" autofocus />
-    <button onclick="checkGate()">Enter</button>
-    <div class="err" id="gate-err"></div>
-  </div>
-</div>
-<h1>Weekly Funnel <span id="storeName"></span><span class="baked-badge" id="bakedBadge"></span></h1>
-<div class="subtitle" id="windowLabel"></div>
-<div id="freshness" style="margin:-4px 0 12px 0;"></div>
+<div id="gate"><div id="gate-box">
+  <span class="oh">oh</span><span class="polly">POLLY</span>
+  <input type="password" id="gate-input" placeholder="Password" autofocus />
+  <button onclick="checkGate()">Enter</button>
+  <div class="err" id="gate-err"></div>
+</div></div>
 
-<div class="toggle-group" id="tabBtns">
-  <span class="label">View</span>
-  <div class="pill active" data-tab="funnel">Weekly funnel</div>
-  <div class="pill" data-tab="weekly">Weekly metrics</div>
-  <div class="pill" data-tab="collections">Collections</div>
-  <div class="pill" data-tab="traffic">Traffic</div>
-  <div class="pill" data-tab="reviews">Reviews</div>
-</div>
+<header>
+  <div class="logo"><span class="oh">oh</span> <span class="polly">POLLY</span></div>
+  <div class="hmeta"><div class="t">Weekly Funnel — Oh Polly UK</div><div class="d" id="windowLabel"></div></div>
+</header>
+<div id="freshness"></div>
 
-<div id="funnelControls">
-  <div class="toggle-group" id="srcBtns"><span class="label">Source</span></div>
-  <div class="toggle-group" id="cmpBtns">
-    <span class="label">Compare</span>
-    <div class="pill active" data-cmp="wow">vs recent average</div>
-    <div class="pill" data-cmp="yoy">vs last year</div>
-    <div class="pill" data-cmp="both">Both</div>
-  </div>
-</div>
-
-<div id="app">
+<section>
+  <div class="eyebrow"><span class="num">01</span> The story this week</div>
+  <p class="lead">What matters, and what it means.</p>
   <div class="verdict" id="verdict"></div>
-  <div id="srcCaveat" style="display:none; font-size:12px; background:#fffbeb; border:1px solid #fcd34d; color:#92400e; border-radius:8px; padding:10px 14px; margin:0 0 12px 0; line-height:1.5;"></div>
+  <div class="cards4" id="cards"></div>
+  <div class="eyebrow" style="margin-top:26px;"><span class="num">＋</span> What changed this week</div>
+  <div class="movers" id="movers"></div>
+</section>
 
-  <div class="section-title">The funnel — last 7 days <span style="text-transform:none; font-weight:400; color:#9ca3af;">(web / online-store sessions only — app shown separately below)</span></div>
-  <div class="funnel-strip" id="funnelStrip"></div>
-  <div id="funnelDiagnosis"></div>
+<section>
+  <div class="eyebrow"><span class="num">02</span> The funnel</div>
+  <p class="lead">Web sessions, last 7 days. The funnel is converting steadily — these steps aren't what's behind this week's revenue pressure (that's traffic, see 01). Use them to spot standing merchandising opportunities. Click any step to drill in.</p>
+  <div class="funnel" id="funnel"></div>
+  <div id="drill"></div>
+</section>
 
-  <div class="kpis" id="kpis"></div>
-
-  <div id="platformBlock">
-    <div class="section-title">Orders by platform — app vs web, last 7 days</div>
-    <table id="platformTable"></table>
-    <div id="platformNote" style="font-size:11px; color:#6b7280; margin:-8px 0 16px 0; line-height:1.5;"></div>
+<section>
+  <div class="eyebrow"><span class="num">03</span> Details &amp; deep dives</div>
+  <p class="lead">Money, customers, and a click into each area.</p>
+  <div class="split2">
+    <div class="panel" id="revPanel"></div>
+    <div class="panel" id="reviewPanel"></div>
   </div>
+  <div class="dives" id="dives"></div>
+  <div id="diveDetail"></div>
+</section>
 
-  <div class="section-title">Daily trend — last 35 days</div>
-  <div class="metric-selector" id="metricPills">
-    <span class="label">Show:</span>
-    <div class="pill" data-metric="1">Sessions</div>
-    <div class="pill" data-metric="2">Add to cart</div>
-    <div class="pill" data-metric="3">Checkout</div>
-    <div class="pill active" data-metric="4">Purchase</div>
-  </div>
-  <div class="chart-container"><canvas id="trend"></canvas></div>
-
-  <div class="grid2">
-    <div id="sourceBlock">
-      <div class="section-title" id="sourceTitle">By source — last 7 days, change vs the week before</div>
-      <table id="sourceTable"></table>
-    </div>
-    <div>
-      <div class="section-title">By device — last 7 days, change vs the week before</div>
-      <table id="deviceTable"></table>
-    </div>
-  </div>
-  <div id="cvrBlock" style="display:none;">
-    <div class="section-title">How each marketing channel converts — last 90 days (GA4 web, all traffic)</div>
-    <div style="font-size:11.5px; color:#6b7280; margin:-2px 0 6px 0; line-height:1.5;">Two views of each channel: how often it <b>introduces</b> a customer who eventually buys (first-visit), versus how often it <b>closes</b> a sale within the visit itself (in-visit). The Role column says which job the channel mainly does.</div>
-    <table id="cvrTable"></table>
-  </div>
-
-  <div class="section-title" id="testsTitle">Top 3 tests this week — ranked by monthly revenue at risk (always all traffic)</div>
-  <div id="testIdeas"></div>
-
-  <div class="footer-note" id="notes"></div>
-</div>
-
-<div id="weeklyTab" style="display:none;">
-  <div class="section-title">Week-on-week metrics — last 20 weeks (Shopify, all customers)</div>
-  <div style="font-size:11.5px; color:#6b7280; margin:-2px 0 10px 0; line-height:1.5;">
-    <b>Checkout completion</b> = of sessions that reached the checkout, the share that completed the purchase. <b>Add-to-cart rate</b> = of all sessions, the share that added something to cart. Full Mon–Sun weeks; the current part-week is excluded. The two run on different scales, so each has its own axis.
-  </div>
-  <div class="chart-container" style="height:280px;"><canvas id="weeklyChart" role="img" aria-label="Weekly checkout completion rate and add-to-cart rate, Oh Polly UK, last 20 weeks"></canvas></div>
-  <div id="weeklyLegend" style="display:flex; gap:16px; margin:4px 0 14px 0; font-size:12px; color:#6b7280;"></div>
-  <table id="weeklyTable"></table>
-</div>
-
-<div id="collectionsTab" style="display:none;">
-  <div class="section-title">Collection performance — last 30 days (Oh Polly UK)</div>
-  <div style="font-size:11.5px; color:#6b7280; margin:-2px 0 10px 0; line-height:1.5;">
-    Funnel for sessions that <b>landed on</b> each collection page. <b>Products</b> = live products in the collection. <b>ATC</b> = added to cart ÷ sessions. <b>Checkout</b> = reached checkout → completed. <b>CVR</b> = sessions → purchase. Sorted by sessions — use it to spot collections pulling traffic but converting weakly.
-  </div>
-  <table id="collectionsTable"></table>
-</div>
-
-<div id="trafficTab" style="display:none;">
-  <div class="section-title">Web traffic — last 15 weeks (Shopify, settled weeks only)</div>
-  <div id="trafficHighlight" style="font-size:12.5px;color:#374151;background:#fafafa;border:1px solid #e5e7eb;border-radius:8px;padding:10px 14px;margin:0 0 12px;line-height:1.5;"></div>
-  <div class="kpis" id="trafficStats" style="grid-template-columns:repeat(3,1fr);"></div>
-  <div style="display:flex;gap:16px;margin:4px 0;font-size:12px;color:#6b7280;">
-    <span style="display:flex;align-items:center;gap:5px;"><span style="width:14px;height:2px;background:#185FA5;display:inline-block;"></span>Sessions</span>
-    <span style="display:flex;align-items:center;gap:5px;"><span style="width:14px;height:0;border-top:2px dashed #0F6E56;display:inline-block;"></span>Visitors (users)</span>
-  </div>
-  <div class="chart-container" style="height:300px;"><canvas id="trafficChart" role="img" aria-label="Weekly sessions and visitors, Oh Polly UK, last 15 weeks"></canvas></div>
-  <div class="section-title">Likely drivers</div>
-  <div style="font-size:12.5px;color:#374151;line-height:1.6;">
-    Hypotheses to validate with marketing — directional (from GA4, which has a UK consent-mode gap), not proven causes:
-    <ul style="margin:8px 0;padding-left:20px;">
-      <li><b>Free-traffic erosion (lead).</b> Organic search and direct/brand demand softening; paid has scaled but isn't fully offsetting it.</li>
-      <li><b>Seasonality.</b> Traffic peaked in early May and has eased into summer — partly the normal spring→summer cycle.</li>
-      <li><b>Weaker top-of-funnel reach.</b> Email and organic social are softer, pulling in fewer new visitors.</li>
-      <li><b>Paid efficiency.</b> Paid up while total is down — worth checking it's incremental, not replacing organic at a cost.</li>
-    </ul>
-  </div>
-  <div class="footer-note">Shopify (Oh Polly UK online store). Visitors = unique online-store visitors. Current part-week excluded so every week is settled. Web only — excludes the Tapcart app.</div>
-</div>
-
-<div id="reviewsTab" style="display:none;">
-  <div class="section-title">Product reviews — last ~120 days (Okendo)</div>
-  <div id="reviewsHighlight" style="font-size:12.5px;color:#374151;background:#fafafa;border:1px solid #e5e7eb;border-radius:8px;padding:10px 14px;margin:0 0 12px;line-height:1.5;"></div>
-  <div class="kpis" id="reviewsStats" style="grid-template-columns:repeat(3,1fr);"></div>
-  <div style="display:flex;gap:16px;margin:4px 0;font-size:12px;color:#6b7280;">
-    <span style="display:flex;align-items:center;gap:5px;"><span style="width:12px;height:12px;border-radius:2px;background:#185FA5;display:inline-block;"></span>Existing products</span>
-    <span style="display:flex;align-items:center;gap:5px;"><span style="width:12px;height:12px;border-radius:2px;background:#EF9F27;display:inline-block;"></span>New products (published in last 90 days)</span>
-  </div>
-  <div class="chart-container" style="height:300px;"><canvas id="reviewsChart" role="img" aria-label="Daily product reviews captured, Oh Polly UK, split new vs existing products"></canvas></div>
-  <div class="footer-note">Source: Okendo (approved reviews). "New product" = Shopify product published within the threshold (currently 90 days). Reviews lag purchase, so very recent drops show few reviews until orders are delivered and worn.</div>
-</div>
+<div class="foot" id="notes"></div>
 
 <script>
 (function(){
   const PW = "OhPolly757x49";
-  if (sessionStorage.getItem("fp_auth") === "1") {
-    document.getElementById("gate").style.display = "none";
-  }
+  if (sessionStorage.getItem("fp_auth") === "1") document.getElementById("gate").style.display = "none";
   window.checkGate = function(){
-    if (document.getElementById("gate-input").value === PW) {
-      sessionStorage.setItem("fp_auth","1");
-      document.getElementById("gate").style.display = "none";
-    } else {
-      document.getElementById("gate-err").textContent = "Incorrect password";
-      document.getElementById("gate-input").value = "";
-      document.getElementById("gate-input").focus();
-    }
+    if (document.getElementById("gate-input").value === PW){ sessionStorage.setItem("fp_auth","1"); document.getElementById("gate").style.display="none"; }
+    else { document.getElementById("gate-err").textContent="Incorrect password"; document.getElementById("gate-input").value=""; document.getElementById("gate-input").focus(); }
   };
-  document.addEventListener("keydown", function(e){
-    if (e.key === "Enter" && document.getElementById("gate").style.display !== "none") checkGate();
-  });
+  document.addEventListener("keydown", e=>{ if(e.key==="Enter" && document.getElementById("gate").style.display!=="none") checkGate(); });
 })();
 
 // Injected weekly by build_share_funnel.py — do not edit by hand
 const SNAPSHOT = {"bakedAt":"2026-06-25","store":"Oh Polly UK","cuts":{"all":{"daily":[["2026-05-21","135530","9130","4016","2364"],["2026-05-22","122509","7887","3506","2018"],["2026-05-23","114889","7338","2936","1474"],["2026-05-24","122727","7513","3027","1565"],["2026-05-25","129266","8271","3348","1741"],["2026-05-26","122408","7034","2996","1452"],["2026-05-27","117325","6290","2859","1466"],["2026-05-28","114672","6133","2959","1553"],["2026-05-29","110162","5768","2802","1483"],["2026-05-30","107647","5494","2321","1155"],["2026-05-31","121106","6417","2691","1381"],["2026-06-01","124180","6594","2996","1528"],["2026-06-02","120665","6427","3054","1595"],["2026-06-03","121028","6565","3049","1639"],["2026-06-04","115611","6717","3209","1749"],["2026-06-05","105175","5534","2630","1372"],["2026-06-06","104527","5419","2292","1150"],["2026-06-07","115294","6283","2757","1370"],["2026-06-08","119171","6504","2844","1505"],["2026-06-09","119464","6166","2876","1489"],["2026-06-10","118818","6313","2942","1553"],["2026-06-11","110741","5969","2796","1525"],["2026-06-12","101653","5032","2236","1198"],["2026-06-13","94634","4546","1916","967"],["2026-06-14","110605","5509","2337","1234"],["2026-06-15","110880","5971","2768","1468"],["2026-06-16","109188","6034","2637","1484"],["2026-06-17","107672","6029","2904","1609"],["2026-06-18","104430","5559","2692","1460"],["2026-06-19","100712","4600","2243","1128"],["2026-06-20","92500","4162","1761","874"],["2026-06-21","105042","5305","2227","1115"],["2026-06-22","104143","5579","2622","1376"],["2026-06-23","101192","5449","2659","1432"],["2026-06-24","93163","5126","2380","1311"]],"yoy":[["2025-06-19","121541","7183","3222","2159"],["2025-06-20","114373","6469","2855","1749"],["2025-06-21","111360","5971","2463","1394"],["2025-06-22","124449","7147","2883","1754"],["2025-06-23","131590","7688","3310","2068"],["2025-06-24","150079","9341","3904","2476"],["2025-06-25","137727","8726","3904","2531"]],"devCur":[["mobile","625542","30615","14004","7500"],["desktop","72958","5009","2499","1167"],["tablet","2533","156","81","29"],["other","147","0","0","0"],["game_console","2","0","0","0"]],"devPrev":[["mobile","661240","33114","14744","8218"],["desktop","78583","5821","2786","1248"],["other","2810","0","0","0"],["tablet","2739","155","64","19"],["game_console","1","0","0","0"]],"ctryCur":[["United Kingdom","340054","19764","8534","5946"],["Germany","52287","2750","2252","636"],["United States","45059","458","180","23"],["France","38731","1740","625","273"],["Italy","24118","1206","507","181"],["Netherlands","20875","1387","563","248"],["Ireland","20297","1086","456","262"],["Switzerland","16860","646","376","138"]],"ctryPrev":[["United Kingdom","370493","21870","9052","6424"],["Germany","57094","3077","2414","795"],["United States","41827","464","199","20"],["France","36678","1713","644","279"],["Italy","27118","1359","568","210"],["Ireland","24226","1298","499","270"],["Netherlands","22219","1356","539","218"],["Poland","17153","802","379","109"],["Switzerland","15223","699","375","143"],["Canada","13535","752","326","111"],["Israel","8985","672","309","111"],["Belgium","8978","499","214","91"]],"srcCur":[["direct","388722","21077","11757","6067"],["search","184874","11241","3915","2274"],["social","117782","3115","670","270"],["unknown","8220","261","208","73"],["email","1510","84","33","12"],["paid","70","2","1","0"],["invalid","4","0","0","0"]],"srcPrev":[["direct","400823","22294","12291","6549"],["search","201794","13105","4371","2544"],["social","129634","3266","675","294"],["unknown","11546","360","236","91"],["email","1539","64","20","6"],["paid","36","1","1","1"],["invalid","1","0","0","0"]]},"direct":{"daily":[["2026-05-21","76177","5325","2759","1610"],["2026-05-22","69381","4333","2355","1350"],["2026-05-23","60454","3995","2004","969"],["2026-05-24","64038","4051","2038","1028"],["2026-05-25","70642","4568","2299","1155"],["2026-05-26","67186","3928","2085","973"],["2026-05-27","64513","3619","2007","997"],["2026-05-28","65787","3619","2105","1116"],["2026-05-29","61837","3409","2007","1037"],["2026-05-30","58684","3185","1611","794"],["2026-05-31","66370","3651","1843","916"],["2026-06-01","69668","3865","2079","1064"],["2026-06-02","67765","3674","2092","1068"],["2026-06-03","71207","3905","2169","1193"],["2026-06-04","66512","4003","2288","1269"],["2026-06-05","59160","3233","1864","956"],["2026-06-06","56691","3125","1640","810"],["2026-06-07","60835","3608","1939","917"],["2026-06-08","64826","3777","2009","1036"],["2026-06-09","64407","3581","1997","996"],["2026-06-10","64785","3669","2074","1069"],["2026-06-11","59928","3424","1947","1065"],["2026-06-12","55794","2901","1570","834"],["2026-06-13","50962","2518","1341","657"],["2026-06-14","56605","3034","1608","829"],["2026-06-15","59141","3405","1955","1028"],["2026-06-16","60047","3524","1815","1029"],["2026-06-17","58346","3488","2055","1107"],["2026-06-18","58087","3307","1916","1026"],["2026-06-19","58502","2754","1619","810"],["2026-06-20","49720","2445","1257","615"],["2026-06-21","55651","3103","1582","791"],["2026-06-22","57892","3311","1865","968"],["2026-06-23","56595","3160","1849","974"],["2026-06-24","52275","2997","1669","883"]],"yoy":[["2025-06-19","77412","4621","2351","1670"],["2025-06-20","72139","4150","2128","1354"],["2025-06-21","68159","3773","1817","1055"],["2025-06-22","74962","4566","2114","1348"],["2025-06-23","80580","4954","2468","1599"],["2025-06-24","95000","6249","2887","1929"],["2025-06-25","87015","5723","2906","1939"]],"devCur":[["mobile","338234","17639","9806","5190"],["desktop","49190","3351","1894","857"],["tablet","1159","87","57","20"],["other","137","0","0","0"],["game_console","2","0","0","0"]],"devPrev":[["mobile","346184","18373","10166","5629"],["desktop","50640","3831","2077","908"],["other","2796","0","0","0"],["tablet","1203","90","48","12"]],"ctryCur":[["United Kingdom","174010","11186","5745","4010"],["United States","36307","350","145","16"],["Germany","26812","1813","1890","479"],["France","20214","1032","430","207"],["Italy","15698","727","350","131"],["Netherlands","11307","799","386","179"],["Canada","10621","575","279","89"],["Ireland","10039","569","300","170"]],"ctryPrev":[["United Kingdom","181027","11855","5974","4275"],["United States","31235","362","169","15"],["Germany","29044","2049","2050","625"],["France","19777","973","448","183"],["Italy","17668","804","378","150"],["Netherlands","11786","730","352","145"],["Ireland","11671","623","299","167"],["Canada","10531","603","271","93"],["Poland","10324","487","252","82"],["Switzerland","7406","380","286","116"],["Israel","5297","286","177","64"],["Spain","5134","249","113","68"]]},"search":{"daily":[["2026-05-21","34367","2758","996","612"],["2026-05-22","29951","2485","893","531"],["2026-05-23","29831","2273","693","383"],["2026-05-24","31618","2346","710","399"],["2026-05-25","32223","2503","785","428"],["2026-05-26","31258","2342","734","407"],["2026-05-27","30511","2104","703","399"],["2026-05-28","29624","1994","697","368"],["2026-05-29","29040","1851","654","384"],["2026-05-30","28597","1787","555","305"],["2026-05-31","32753","2143","682","402"],["2026-06-01","33256","2180","773","420"],["2026-06-02","32578","2268","808","462"],["2026-06-03","30874","2169","739","401"],["2026-06-04","30214","2162","767","424"],["2026-06-05","27472","1809","628","368"],["2026-06-06","29250","1817","536","289"],["2026-06-07","33347","2114","680","402"],["2026-06-08","33000","2193","692","417"],["2026-06-09","32510","2083","734","432"],["2026-06-10","31705","2151","749","434"],["2026-06-11","29980","2021","710","411"],["2026-06-12","27099","1688","547","317"],["2026-06-13","26491","1597","491","278"],["2026-06-14","31224","1939","598","344"],["2026-06-15","30531","2027","663","381"],["2026-06-16","28503","1975","678","387"],["2026-06-17","27966","1858","684","426"],["2026-06-18","27381","1683","626","370"],["2026-06-19","24764","1384","492","269"],["2026-06-20","25175","1302","387","215"],["2026-06-21","28722","1674","517","281"],["2026-06-22","28524","1811","646","362"],["2026-06-23","26057","1728","649","395"],["2026-06-24","24251","1659","598","382"]],"yoy":[["2025-06-19","28445","1978","704","436"],["2025-06-20","25943","1735","572","333"],["2025-06-21","26199","1615","497","284"],["2025-06-22","30460","1968","611","353"],["2025-06-23","31475","2122","688","412"],["2025-06-24","32648","2316","824","473"],["2025-06-25","32242","2333","824","522"]],"devCur":[["mobile","163392","9602","3341","1980"],["desktop","20692","1576","553","287"],["tablet","790","63","21","7"]],"devPrev":[["mobile","177004","11140","3691","2216"],["desktop","23976","1906","665","321"],["tablet","812","59","15","7"],["other","1","0","0","0"],["game_console","1","0","0","0"]],"ctryCur":[["United Kingdom","102665","6894","2415","1721"],["Germany","14685","648","267","128"],["France","9182","508","155","50"],["Ireland","7067","424","138","87"],["Italy","6332","372","116","34"],["Netherlands","6272","445","140","60"],["Poland","5015","197","69","21"],["Switzerland","2986","177","73","24"]],"ctryPrev":[["United Kingdom","112048","7960","2668","1896"],["Germany","15939","791","278","144"],["France","9468","549","165","82"],["Ireland","8551","559","176","93"],["Italy","6990","435","146","45"],["Netherlands","6880","502","147","63"],["Poland","5883","287","118","24"],["Switzerland","3616","229","60","20"],["United States","2851","52","16","5"],["Israel","2755","304","107","39"],["Belgium","2553","163","43","20"],["Canada","2073","119","46","15"]]},"social":{"daily":[["2026-05-21","22483","931","196","103"],["2026-05-22","21432","968","187","103"],["2026-05-23","22456","1002","189","107"],["2026-05-24","25290","1032","227","114"],["2026-05-25","24415","1111","212","137"],["2026-05-26","21765","655","127","50"],["2026-05-27","20266","507","110","52"],["2026-05-28","17347","453","114","50"],["2026-05-29","17428","438","104","43"],["2026-05-30","18737","462","115","40"],["2026-05-31","19818","544","111","46"],["2026-06-01","18731","488","99","31"],["2026-06-02","17823","414","104","41"],["2026-06-03","17043","427","92","33"],["2026-06-04","17384","487","108","45"],["2026-06-05","17175","432","95","40"],["2026-06-06","17221","424","81","37"],["2026-06-07","19467","506","98","34"],["2026-06-08","19595","480","95","39"],["2026-06-09","19965","446","99","44"],["2026-06-10","20100","440","79","31"],["2026-06-11","19276","450","96","38"],["2026-06-12","17460","404","94","37"],["2026-06-13","15424","379","60","25"],["2026-06-14","19905","482","87","40"],["2026-06-15","18849","469","110","43"],["2026-06-16","18796","464","104","50"],["2026-06-17","19924","618","124","61"],["2026-06-18","17274","519","117","50"],["2026-06-19","15927","420","93","40"],["2026-06-20","16331","371","76","30"],["2026-06-21","19540","480","93","36"],["2026-06-22","16376","408","85","28"],["2026-06-23","17124","499","123","51"],["2026-06-24","15210","418","83","35"]],"yoy":[["2025-06-19","14512","506","126","34"],["2025-06-20","15070","489","117","43"],["2025-06-21","14979","484","113","36"],["2025-06-22","17709","549","128","31"],["2025-06-23","17122","512","115","34"],["2025-06-24","18316","615","144","51"],["2025-06-25","16761","559","136","48"]],"devCur":[["mobile","115327","3091","663","267"],["desktop","1907","18","4","1"],["tablet","538","6","3","2"],["other","10","0","0","0"]],"devPrev":[["mobile","126419","3236","669","292"],["desktop","2550","26","6","2"],["tablet","652","4","0","0"],["other","13","0","0","0"]],"ctryCur":[["United Kingdom","59918","1510","280","160"],["Germany","10151","256","50","19"],["France","8978","184","27","13"],["Switzerland","6984","92","18","7"],["United States","4069","52","16","0"],["Netherlands","3093","132","18","5"],["Ireland","2942","80","11","1"],["Austria","2126","91","17","4"]],"ctryPrev":[["United Kingdom","72499","1831","299","186"],["Germany","11407","204","42","15"],["France","7047","164","20","12"],["United States","4640","28","8","0"],["Switzerland","4032","88","26","7"],["Ireland","3724","108","17","8"],["Netherlands","3320","109","25","7"],["Italy","2056","102","32","12"],["Austria","1928","60","10","2"],["Belgium","1640","50","13","3"],["India","1458","30","9","0"],["Malaysia","1284","3","0","0"]]}},"mobileSrc":{"cur":[["direct","338234","17639","9806","5190"],["search","163392","9602","3341","1980"],["social","115327","3091","663","267"],["unknown","7084","206","166","53"],["email","1443","76","28","10"],["paid","58","1","0","0"],["invalid","4","0","0","0"]],"prev":[["direct","346184","18373","10166","5629"],["search","177004","11140","3691","2216"],["social","126419","3236","669","292"],["unknown","10121","301","198","74"],["email","1484","63","19","6"],["paid","27","1","1","1"],["invalid","1","0","0","0"]]},"platform":{"channels":{"web":"Online Store","app":"Tapcart - Mobile App"},"web":{"daily":[["2026-05-21","2784","116617.65"],["2026-05-22","2376","117753.74"],["2026-05-23","1759","97783.48"],["2026-05-24","1859","180012.89"],["2026-05-25","2141","144312.81"],["2026-05-26","1771","94039.16"],["2026-05-27","1791","116964.22"],["2026-05-28","1837","139808.35"],["2026-05-29","1784","125327.48"],["2026-05-30","1396","92743.13"],["2026-05-31","1703","130417.14"],["2026-06-01","1822","93019.49"],["2026-06-02","1950","109919.5"],["2026-06-03","1961","113723.97"],["2026-06-04","2083","161304.88"],["2026-06-05","1680","99752.41"],["2026-06-06","1370","54017.45"],["2026-06-07","1693","131472.76"],["2026-06-08","1820","133056.84"],["2026-06-09","1829","121686.67"],["2026-06-10","1911","112442.75"],["2026-06-11","1818","148389.45"],["2026-06-12","1473","37283.65"],["2026-06-13","1170","76356"],["2026-06-14","1503","109367.81"],["2026-06-15","1751","67357.59"],["2026-06-16","1771","78765.33"],["2026-06-17","1947","116785.34"],["2026-06-18","1767","91974.23"],["2026-06-19","1382","62348.93"],["2026-06-20","1059","58970.81"],["2026-06-21","1377","128148.79"],["2026-06-22","1704","148067.08"],["2026-06-23","1715","117850.62"],["2026-06-24","1580","105703.43"]],"yoy":[["2025-06-19","1974","122714.12"],["2025-06-20","1643","43245.06"],["2025-06-21","1319","20183.7"],["2025-06-22","1675","155860.96"],["2025-06-23","1915","122420.65"],["2025-06-24","2263","129027.5"],["2025-06-25","2322","112388.43"]]},"app":{"daily":[["2026-05-21","1434","98658.88"],["2026-05-22","1231","79683.49"],["2026-05-23","783","56308.04"],["2026-05-24","802","87885.64"],["2026-05-25","947","72793.26"],["2026-05-26","864","53772.48"],["2026-05-27","790","44530.03"],["2026-05-28","891","64473.8"],["2026-05-29","814","50019.06"],["2026-05-30","564","33216.97"],["2026-05-31","689","54708.83"],["2026-06-01","781","43112.33"],["2026-06-02","883","52947.26"],["2026-06-03","860","49873.55"],["2026-06-04","998","80599.63"],["2026-06-05","710","43042.93"],["2026-06-06","581","26779.96"],["2026-06-07","683","48014.29"],["2026-06-08","792","62053.98"],["2026-06-09","808","54920.71"],["2026-06-10","842","49051.84"],["2026-06-11","810","60991.87"],["2026-06-12","655","28954.01"],["2026-06-13","481","32539.77"],["2026-06-14","629","62393.4"],["2026-06-15","761","28724.83"],["2026-06-16","899","60736.55"],["2026-06-17","805","49290.78"],["2026-06-18","761","49763.53"],["2026-06-19","601","28936.15"],["2026-06-20","461","21048.8"],["2026-06-21","555","50957.52"],["2026-06-22","675","47976.8"],["2026-06-23","820","65637.19"],["2026-06-24","729","55006.09"]],"yoy":[["2025-06-19","1131","74989.08"],["2025-06-20","824","26805.55"],["2025-06-21","578","15942.15"],["2025-06-22","806","74636.68"],["2025-06-23","1009","69979.19"],["2025-06-24","1251","70341.7"],["2025-06-25","1317","83634.33"]]}},"weekly":{"metricLabels":["weekStart","sessions","atc","reachedCheckout","completedCheckout"],"rows":[["2026-02-02","505010","24529","14204","6582"],["2026-02-09","846039","41496","24168","11776"],["2026-02-16","873366","37712","18859","9061"],["2026-02-23","856090","40013","19560","10055"],["2026-03-02","867517","39336","19034","9714"],["2026-03-09","997729","55581","23998","12723"],["2026-03-16","907147","44899","20269","10536"],["2026-03-23","893199","38870","17347","8993"],["2026-03-30","927765","41046","18414","9613"],["2026-04-06","856103","37026","17107","8552"],["2026-04-13","884123","38486","18295","9119"],["2026-04-20","886026","40052","19304","9625"],["2026-04-27","923648","49171","22570","12119"],["2026-05-04","954328","49131","22634","11282"],["2026-05-11","909717","45963","19936","9994"],["2026-05-18","909622","53873","23301","12522"],["2026-05-25","822586","45407","19976","10231"],["2026-06-01","806480","43539","19987","10403"],["2026-06-08","775086","40039","17947","9471"],["2026-06-15","730424","37660","17232","9138"]]},"trafficWeekly":{"metricLabels":["weekStart","sessions","visitors"],"rows":[["2026-03-09","997729","713204"],["2026-03-16","907147","645951"],["2026-03-23","893199","627133"],["2026-03-30","927765","646555"],["2026-04-06","856103","598619"],["2026-04-13","884123","615864"],["2026-04-20","886026","617271"],["2026-04-27","923648","643298"],["2026-05-04","954328","662101"],["2026-05-11","909717","635554"],["2026-05-18","909622","634903"],["2026-05-25","822586","578008"],["2026-06-01","806480","557285"],["2026-06-08","775086","542832"],["2026-06-15","730424","521217"]]},"ga4Channels":{"property":"UK","window":{"start":"2026-03-26","end":"2026-06-23"},"firstTouch":{"Direct":{"users":1946923,"purchases":45811},"Organic Search":{"users":1491810,"purchases":15128},"Paid Social":{"users":1139068,"purchases":5541},"Organic Social":{"users":731129,"purchases":1300},"Paid Shopping":{"users":517480,"purchases":12829},"Cross-network":{"users":505455,"purchases":9975},"Paid Search":{"users":449937,"purchases":12470},"Unassigned":{"users":315659,"purchases":2173},"Email":{"users":175461,"purchases":2782},"Referral":{"users":39603,"purchases":864},"Organic Shopping":{"users":25729,"purchases":643},"Affiliates":{"users":16157,"purchases":483},"AI Assistant":{"users":15623,"purchases":47},"Mobile Push Notifications":{"users":3188,"purchases":15},"Organic Video":{"users":265,"purchases":0},"Paid Other":{"users":102,"purchases":2},"SMS":{"users":42,"purchases":1}},"inSession":{"Direct":{"sessions":3209435,"purchases":29030},"Organic Search":{"sessions":2727296,"purchases":17209},"Paid Social":{"sessions":2312702,"purchases":6611},"Paid Shopping":{"sessions":1064865,"purchases":15620},"Cross-network":{"sessions":963770,"purchases":9952},"Paid Search":{"sessions":932632,"purchases":14188},"Organic Social":{"sessions":900489,"purchases":1549},"Unassigned":{"sessions":663038,"purchases":4585},"Email":{"sessions":543161,"purchases":5102},"Referral":{"sessions":181774,"purchases":3836},"Organic Shopping":{"sessions":86344,"purchases":1582},"Affiliates":{"sessions":25199,"purchases":691},"Mobile Push Notifications":{"sessions":20295,"purchases":38},"AI Assistant":{"sessions":18586,"purchases":56},"(other)":{"sessions":501,"purchases":8},"Organic Video":{"sessions":396,"purchases":1},"Paid Other":{"sessions":252,"purchases":6},"SMS":{"sessions":8,"purchases":0}}},"reviews":{"fetched_at":"2026-06-25","store":"Oh Polly UK","windowDays":120,"thresholdDays":90,"daily":{"2026-02-25":{"new":0,"existing":119},"2026-02-26":{"new":0,"existing":145},"2026-02-27":{"new":0,"existing":131},"2026-02-28":{"new":0,"existing":92},"2026-03-01":{"new":0,"existing":92},"2026-03-02":{"new":1,"existing":109},"2026-03-03":{"new":1,"existing":108},"2026-03-04":{"new":0,"existing":87},"2026-03-05":{"new":0,"existing":113},"2026-03-06":{"new":0,"existing":82},"2026-03-07":{"new":0,"existing":80},"2026-03-08":{"new":0,"existing":94},"2026-03-09":{"new":0,"existing":127},"2026-03-10":{"new":0,"existing":119},"2026-03-11":{"new":0,"existing":94},"2026-03-12":{"new":0,"existing":135},"2026-03-13":{"new":0,"existing":99},"2026-03-14":{"new":0,"existing":84},"2026-03-15":{"new":0,"existing":74},"2026-03-16":{"new":0,"existing":115},"2026-03-17":{"new":0,"existing":82},"2026-03-18":{"new":0,"existing":118},"2026-03-19":{"new":0,"existing":126},"2026-03-20":{"new":1,"existing":96},"2026-03-21":{"new":1,"existing":81},"2026-03-22":{"new":0,"existing":85},"2026-03-23":{"new":0,"existing":74},"2026-03-24":{"new":0,"existing":124},"2026-03-25":{"new":0,"existing":118},"2026-03-26":{"new":0,"existing":102},"2026-03-27":{"new":0,"existing":81},"2026-03-28":{"new":0,"existing":82},"2026-03-29":{"new":0,"existing":62},"2026-03-30":{"new":0,"existing":75},"2026-03-31":{"new":0,"existing":127},"2026-04-01":{"new":0,"existing":98},"2026-04-02":{"new":0,"existing":101},"2026-04-03":{"new":0,"existing":91},"2026-04-04":{"new":0,"existing":70},"2026-04-05":{"new":0,"existing":72},"2026-04-06":{"new":0,"existing":55},"2026-04-07":{"new":0,"existing":72},"2026-04-08":{"new":1,"existing":101},"2026-04-09":{"new":0,"existing":102},"2026-04-10":{"new":0,"existing":78},"2026-04-11":{"new":0,"existing":72},"2026-04-12":{"new":0,"existing":69},"2026-04-13":{"new":0,"existing":86},"2026-04-14":{"new":0,"existing":78},"2026-04-15":{"new":0,"existing":95},"2026-04-16":{"new":0,"existing":116},"2026-04-17":{"new":0,"existing":91},"2026-04-18":{"new":0,"existing":78},"2026-04-19":{"new":0,"existing":82},"2026-04-20":{"new":0,"existing":63},"2026-04-21":{"new":0,"existing":74},"2026-04-22":{"new":0,"existing":111},"2026-04-23":{"new":0,"existing":98},"2026-04-24":{"new":0,"existing":106},"2026-04-25":{"new":0,"existing":81},"2026-04-26":{"new":0,"existing":107},"2026-04-27":{"new":0,"existing":78},"2026-04-28":{"new":0,"existing":114},"2026-04-29":{"new":0,"existing":152},"2026-04-30":{"new":0,"existing":120},"2026-05-01":{"new":0,"existing":125},"2026-05-02":{"new":0,"existing":111},"2026-05-03":{"new":0,"existing":111},"2026-05-04":{"new":1,"existing":108},"2026-05-05":{"new":0,"existing":117},"2026-05-06":{"new":0,"existing":106},"2026-05-07":{"new":0,"existing":122},"2026-05-08":{"new":0,"existing":96},"2026-05-09":{"new":0,"existing":113},"2026-05-10":{"new":1,"existing":89},"2026-05-11":{"new":0,"existing":87},"2026-05-12":{"new":1,"existing":139},"2026-05-13":{"new":0,"existing":135},"2026-05-14":{"new":0,"existing":123},"2026-05-15":{"new":0,"existing":109},"2026-05-16":{"new":1,"existing":66},"2026-05-17":{"new":1,"existing":74},"2026-05-18":{"new":0,"existing":96},"2026-05-19":{"new":0,"existing":111},"2026-05-20":{"new":0,"existing":135},"2026-05-21":{"new":0,"existing":174},"2026-05-22":{"new":0,"existing":118},"2026-05-23":{"new":0,"existing":91},"2026-05-24":{"new":1,"existing":116},"2026-05-25":{"new":0,"existing":126},"2026-05-26":{"new":0,"existing":126},"2026-05-27":{"new":0,"existing":117},"2026-05-28":{"new":0,"existing":110},"2026-05-29":{"new":0,"existing":68},"2026-05-30":{"new":1,"existing":69},"2026-05-31":{"new":0,"existing":106},"2026-06-01":{"new":0,"existing":110},"2026-06-02":{"new":0,"existing":102},"2026-06-03":{"new":0,"existing":119},"2026-06-04":{"new":0,"existing":135},"2026-06-05":{"new":0,"existing":88},"2026-06-06":{"new":0,"existing":81},"2026-06-07":{"new":0,"existing":106},"2026-06-08":{"new":0,"existing":97},"2026-06-09":{"new":0,"existing":119},"2026-06-10":{"new":0,"existing":149},"2026-06-11":{"new":0,"existing":93},"2026-06-12":{"new":0,"existing":67},"2026-06-13":{"new":0,"existing":69},"2026-06-14":{"new":0,"existing":81},"2026-06-15":{"new":1,"existing":101},"2026-06-16":{"new":0,"existing":129},"2026-06-17":{"new":0,"existing":102},"2026-06-18":{"new":0,"existing":102},"2026-06-19":{"new":0,"existing":84},"2026-06-20":{"new":0,"existing":63},"2026-06-21":{"new":0,"existing":59},"2026-06-22":{"new":0,"existing":90},"2026-06-23":{"new":0,"existing":123},"2026-06-24":{"new":0,"existing":98},"2026-06-25":{"new":0,"existing":13}}}};
 
-const SOURCES = ["all","direct","search","social"];
-const STEP_LABELS = ["", "Sessions", "Add to cart", "Checkout", "Purchase"];
-const STEP_DEFS = [
-  { key:"s2a", label:"Sessions → Add to cart", num:2, den:1, area:"PDP / product discovery" },
-  { key:"a2c", label:"Add to cart → Checkout", num:3, den:2, area:"Cart" },
-  { key:"c2p", label:"Checkout → Purchase", num:4, den:3, area:"Checkout" },
-];
-const EXAMPLE_TESTS = {
-  s2a: ["PDP imagery order", "Size & fit guidance", "Review placement / social proof"],
-  a2c: ["Shipping-threshold messaging in cart", "Cart drawer vs full page", "Cross-sell density"],
-  c2p: ["Express-pay prominence", "Shipping cost & speed display", "Payment method options"],
-  geo: ["Duties/shipping clarity for the market", "Local payment methods", "Currency & delivery promise"],
-  device: ["Mobile-only variant of the affected step", "Check recent theme/app releases for mobile regressions"],
-};
-
+// ---- helpers ----
 const fmtInt = n => Math.round(n).toLocaleString();
 const pct = (n,d=2) => (100*n).toFixed(d)+"%";
 const qd = d => d.toISOString().slice(0,10);
 function addDays(d,n){ const x=new Date(d); x.setDate(x.getDate()+n); return x; }
-function relDelta(cur, base){ return (base>0) ? (cur-base)/base : null; }
-function deltaCls(d){ return d===null? "delta-flat" : d>0.005? "delta-up" : d<-0.005? "delta-down" : "delta-flat"; }
-function fmtSigned(d){ return d===null? "n/a" : (d>=0?"+":"")+(100*d).toFixed(1)+"%"; }
+function relDelta(c,b){ return (b>0)?(c-b)/b:null; }
+function deltaCls(d){ return d===null?"flat":d>0.005?"up":d<-0.005?"down":"flat"; }
+function fmtSigned(d){ return d===null?"n/a":(d>=0?"+":"")+(100*d).toFixed(1)+"%"; }
 function fmtDate(iso){ const d=new Date(iso+"T12:00:00"); return d.toLocaleDateString("en-GB",{day:"numeric",month:"short"}); }
+function sumRows(rows,from,to){ const o={sessions:0,atc:0,checkout:0,purchase:0}; for(const r of rows){ const d=r[0].slice(0,10); if(d>=from&&d<=to){o.sessions+=+r[1];o.atc+=+r[2];o.checkout+=+r[3];o.purchase+=+r[4];} } return o; }
+function sumPlat(rows,from,to){ let orders=0,revenue=0; for(const r of rows){ const d=r[0].slice(0,10); if(d>=from&&d<=to){orders+=+r[1];revenue+=+r[2];} } return {orders,revenue}; }
+function asMap(rows){ const m={}; for(const r of rows) m[r[0]]={sessions:+r[1],atc:+r[2],checkout:+r[3],purchase:+r[4]}; return m; }
+const STEP_DEFS=[ {key:"atc",label:"Sessions → Add to cart",num:2,den:1,area:"PDP / product discovery"},
+  {key:"checkout",label:"Add to cart → Checkout",num:3,den:2,area:"Cart"},
+  {key:"purchase",label:"Checkout → Purchase",num:4,den:3,area:"Checkout"} ];
+const stepCR=(t,def)=>{ const dens={1:t.sessions,2:t.atc,3:t.checkout}, nums={2:t.atc,3:t.checkout,4:t.purchase}; return dens[def.den]>0?nums[def.num]/dens[def.den]:0; };
+function worstSeg(curRows,prevRows,def,minShare=0.05){ const c=asMap(curRows),p=asMap(prevRows); const tot=Object.values(c).reduce((a,v)=>a+v.sessions,0); let w=null; for(const k of Object.keys(c)){ const cc=c[k],pp=p[k]; if(!pp||cc.sessions/tot<minShare) continue; const d=relDelta(stepCR(cc,def),stepCR(pp,def)); if(d!==null&&(!w||d<w.d)) w={name:k,d}; } return w; }
 
-function sumRows(rows, from, to){
-  const out = { sessions:0, atc:0, checkout:0, purchase:0 };
-  for (const row of rows){
-    const d = row[0].slice(0,10);
-    if (d >= from && d <= to){ out.sessions+=+row[1]; out.atc+=+row[2]; out.checkout+=+row[3]; out.purchase+=+row[4]; }
-  }
-  return out;
-}
-const stepCR = (t, def) => {
-  const dens = { 1:t.sessions, 2:t.atc, 3:t.checkout };
-  const nums = { 2:t.atc, 3:t.checkout, 4:t.purchase };
-  return dens[def.den] > 0 ? nums[def.num]/dens[def.den] : 0;
-};
-function findChangeDate(rows, def, baseCR){
-  let runStart = null;
-  for (let i = rows.length-1; i >= 0; i--){
-    const den = +rows[i][def.den], num = +rows[i][def.num];
-    if (den < 50) continue;
-    const cr = num/den;
-    if (cr < baseCR * 0.97) runStart = rows[i][0].slice(0,10);
-    else break;
-  }
-  return runStart;
-}
+// ---- windows ----
+const A = SNAPSHOT.cuts.all;
+const today=new Date(SNAPSHOT.bakedAt+"T12:00:00"), yest=addDays(today,-1);
+const curFrom=qd(addDays(yest,-6)),curTo=qd(yest), baseFrom=qd(addDays(yest,-34)),baseTo=qd(addDays(yest,-7));
+const yoyFrom=qd(addDays(addDays(yest,-6),-364)),yoyTo=qd(addDays(yest,-364));
+const cur=sumRows(A.daily,curFrom,curTo), base=sumRows(A.daily,baseFrom,baseTo), yy=sumRows(A.yoy,yoyFrom,yoyTo);
+const baseW={sessions:base.sessions/4,atc:base.atc/4,checkout:base.checkout/4,purchase:base.purchase/4};
 
-let activeSource = "all";
-let cmpMode = "wow"; // "wow" (vs recent avg, default) | "yoy" (vs last year) | "both"
-document.getElementById("cmpBtns").querySelectorAll(".pill").forEach(p => p.addEventListener("click", ()=>{
-  document.getElementById("cmpBtns").querySelectorAll(".pill").forEach(x=>x.classList.remove("active"));
-  p.classList.add("active");
-  cmpMode = p.dataset.cmp;
-  render();
-}));
-function renderSrcBtns(){
-  const el = document.getElementById("srcBtns");
-  el.innerHTML = '<span class="label">Source</span>' + SOURCES.map(s =>
-    `<div class="pill ${s===activeSource?'active':''}" data-src="${s}">${s==="all"?"All":s[0].toUpperCase()+s.slice(1)}</div>`
-  ).join("");
-  el.querySelectorAll("[data-src]").forEach(p => p.addEventListener("click", ()=>{
-    activeSource = p.dataset.src;
-    renderSrcBtns(); render();
-  }));
-}
+// ---- header / freshness ----
+document.getElementById("windowLabel").textContent="Data to "+fmtDate(curTo)+" · web · updates Mondays";
+function freshPill(t,stale){ const bg=stale?"#fffbeb":"#f0fdf4",bd=stale?"#fcd34d":"#bbf7d0",fg=stale?"#92400e":"#166534",dot=stale?"#d97706":"#16a34a";
+  return `<span class="pill" style="background:${bg};border:1px solid ${bd};color:${fg};"><span style="width:7px;height:7px;border-radius:50%;background:${dot};display:inline-block;"></span>${t}</span>`; }
+(function(){ const now=new Date(); const sa=Math.round((now-new Date(SNAPSHOT.bakedAt+"T12:00:00"))/864e5); let h=freshPill(`Shopify: refreshed ${fmtDate(SNAPSHOT.bakedAt)}${sa>2?` — ${sa}d ago`:""}`, sa>2);
+  const G=SNAPSHOT.ga4Channels; if(G&&G.window&&G.window.end){ const ga=Math.round((now-new Date(G.window.end+"T12:00:00"))/864e5); h+=freshPill(`GA4 channels: to ${fmtDate(G.window.end)}${ga>3?` — ${ga}d behind`:""}`, ga>3);} document.getElementById("freshness").innerHTML=h; })();
 
-let trendChart = null, trendRows = [];
-let activeMetric = 4;
-function linearFit(ys){ // least-squares straight line through the daily series
-  const n = ys.length;
-  if (n < 2) return ys.slice();
-  let sx=0, sy=0, sxx=0, sxy=0;
-  for (let i=0;i<n;i++){ sx+=i; sy+=ys[i]; sxx+=i*i; sxy+=i*ys[i]; }
-  const slope = (n*sxy - sx*sy) / (n*sxx - sx*sx || 1);
-  const intercept = (sy - slope*sx) / n;
-  return ys.map((_,i)=> intercept + slope*i);
-}
-function renderTrend(){
-  const canvas = document.getElementById("trend");
-  const labels = trendRows.map(r => r[0].slice(5,10));
-  const series = trendRows.map(r => +r[activeMetric]);
-  const fit = linearFit(series);
-  const dir = fit.length>1 ? fit[fit.length-1]-fit[0] : 0;
-  if (trendChart) trendChart.destroy();
-  trendChart = new Chart(canvas, {
-    type: "line",
-    data: { labels, datasets: [{
-      label: STEP_LABELS[activeMetric], data: series,
-      borderColor: "#1d1d1f", backgroundColor: "rgba(29,29,31,0.05)",
-      borderWidth: 1.5, pointRadius: 2, pointBackgroundColor: "#cbd5e1",
-      tension: 0.25, fill: true,
-    },{
-      label: "Direction over the 35 days", data: fit,
-      borderColor: dir < 0 ? "#b91c1c" : "#047857", borderDash: [6,4],
-      borderWidth: 1.5, pointRadius: 0, fill: false, tension: 0,
-    }]},
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false },
-        tooltip: { filter: c => c.datasetIndex === 0,
-          callbacks: { label: c => fmtInt(c.parsed.y) + " " + STEP_LABELS[activeMetric].toLowerCase() } } },
-      scales: { y: { beginAtZero: false, ticks: { font: { size: 10 } } },
-                x: { ticks: { font: { size: 10 }, maxRotation: 0, autoSkipPadding: 12 } } },
-    },
-  });
-}
-document.getElementById("metricPills").querySelectorAll(".pill").forEach(p => p.addEventListener("click", ()=>{
-  document.getElementById("metricPills").querySelectorAll(".pill").forEach(x=>x.classList.remove("active"));
-  p.classList.add("active");
-  activeMetric = +p.dataset.metric;
-  renderTrend();
-}));
-
-function sumPlat(rows, from, to){
-  let orders = 0, revenue = 0;
-  for (const r of rows){
-    const d = r[0].slice(0,10);
-    if (d >= from && d <= to){ orders += +r[1]; revenue += +r[2]; }
-  }
-  return { orders, revenue };
-}
-function renderPlatform(){
-  const P = SNAPSHOT.platform;
-  const block = document.getElementById("platformBlock");
-  if (!P || !P.web || !P.app){ if (block) block.style.display = "none"; return; }
-  block.style.display = "";
-  const today = new Date(SNAPSHOT.bakedAt + "T12:00:00");
-  const yest = addDays(today,-1);
-  const curFrom = qd(addDays(yest,-6)), curTo = qd(yest);
-  const baseFrom = qd(addDays(yest,-34)), baseTo = qd(addDays(yest,-7));
-  const yoyFrom = qd(addDays(addDays(yest,-6),-364)), yoyTo = qd(addDays(yest,-364));
-  function rowFor(label, src){
-    const cur = sumPlat(src.daily, curFrom, curTo);
-    const base = sumPlat(src.daily, baseFrom, baseTo);
-    const baseW = { orders: base.orders/4, revenue: base.revenue/4 };
-    const yy = sumPlat(src.yoy, yoyFrom, yoyTo);
-    return { label, cur, baseW, yy };
-  }
-  const web = rowFor("Web (Online Store)", P.web);
-  const app = rowFor("App (Tapcart)", P.app);
-  const totCur = web.cur.orders + app.cur.orders;
-  function deltas(curV, baseWV, yyV){
-    const parts = [];
-    if (cmpMode!=="yoy"){ const d = relDelta(curV, baseWV); parts.push(`<span class="d ${deltaCls(d)}">${fmtSigned(d)} vs recent avg</span>`); }
-    if (cmpMode!=="wow"){ const d = relDelta(curV, yyV); parts.push(`<span class="d ${deltaCls(d)}">${fmtSigned(d)} vs last year</span>`); }
-    return parts.join(" ");
-  }
-  function tr(r){
-    const share = totCur ? r.cur.orders/totCur : 0;
-    return `<tr><td>${r.label}</td>
-      <td>${fmtInt(r.cur.orders)}<span class="d">${deltas(r.cur.orders, r.baseW.orders, r.yy.orders)}</span></td>
-      <td>£${fmtInt(r.cur.revenue)}<span class="d">${deltas(r.cur.revenue, r.baseW.revenue, r.yy.revenue)}</span></td>
-      <td>${pct(share,1)}</td></tr>`;
-  }
-  document.getElementById("platformTable").innerHTML =
-    `<tr><th>Platform</th><th>Orders</th><th>Revenue</th><th>Share of orders</th></tr>` + tr(web) + tr(app);
-  const appShareCur = totCur ? app.cur.orders/totCur : 0;
-  const totYy = web.yy.orders + app.yy.orders;
-  const appShareYy = totYy ? app.yy.orders/totYy : 0;
-  const sharePts = (appShareCur - appShareYy) * 100;
-  const shareDir = Math.abs(sharePts) < 0.5 ? "about level with" : `${sharePts>0?"up":"down"} ${Math.abs(sharePts).toFixed(1)} points on`;
-  document.getElementById("platformNote").innerHTML =
-    `App = Tapcart mobile app; Web = online store (the funnel above). App is <b>${pct(appShareCur,1)}</b> of orders this week, ${shareDir} the same week last year. `
-    + `These are completed orders by Shopify sales channel — the app has no session-level funnel in Shopify, so it is not part of the funnel strip above (online-store web sessions only). All orders, all sources — not affected by the source filter.`;
-}
-
-function render(){
-  const cut = SNAPSHOT.cuts[activeSource];
-  const today = new Date(SNAPSHOT.bakedAt + "T12:00:00");
-  const yest = addDays(today,-1);
-  const curFrom = addDays(yest,-6), curTo = yest;
-  const baseFrom = addDays(yest,-34), baseTo = addDays(yest,-7);
-  const yoyFrom = addDays(curFrom,-364), yoyTo = addDays(curTo,-364);
-
-  const cur = sumRows(cut.daily, qd(curFrom), qd(curTo));
-  const base = sumRows(cut.daily, qd(baseFrom), qd(baseTo));
-  const yy = sumRows(cut.yoy, qd(yoyFrom), qd(yoyTo));
-  const baseW = { sessions:base.sessions/4, atc:base.atc/4, checkout:base.checkout/4, purchase:base.purchase/4 };
-
-  document.getElementById("storeName").textContent = "— " + SNAPSHOT.store;
-  document.getElementById("bakedBadge").textContent = "Data to " + fmtDate(qd(curTo)) + " · updates Mondays";
-  const srcLabel = activeSource==="all" ? "" : ` (${activeSource} traffic only)`;
-  document.getElementById("windowLabel").textContent =
-    `Covers ${fmtDate(qd(curFrom))} – ${fmtDate(qd(curTo))}${srcLabel}. Changes are shown against the average week over the previous four weeks ("vs recent avg") and against the same week last year ("vs last year"). Shopify data, refreshed every Monday.`;
-
-  const _cv = document.getElementById("srcCaveat");
-  if (activeSource === "social"){ _cv.style.display=""; _cv.innerHTML = "<b>Read social as a trend, not an absolute conversion rate.</b> Social conversions are under-counted here — in-app browsers (Instagram, TikTok) and privacy features push the converting visit into ‘direct’, so social shows lots of sessions but few purchases. Watch the direction over time, and see the GA4 channel section below for social’s true, later-converting value."; }
-  else { _cv.style.display="none"; }
-  renderVerdict(cur, baseW, yy, base, cut);
-  renderKpis(cur, baseW, yy);
-  renderPlatform();
-  renderFunnelStrip(cur, baseW, yy, base, cut);
-  trendRows = cut.daily;
-  try { renderTrend(); } catch(e){ document.querySelector(".chart-container").innerHTML = '<div style="padding:20px;color:#6b7280;font-size:12px;">Chart unavailable — numbers above are unaffected.</div>'; }
-  // When a source filter is active, the whole page shows ONLY that source's traffic.
-  // The all-sources comparison table is replaced by a clear filter notice to avoid mixed signals.
-  if (activeSource === "all"){
-    document.getElementById("sourceTitle").textContent = "By source — last 7 days, change vs the week before";
-    renderSplitTable("sourceTable", "Source", SNAPSHOT.cuts.all.srcCur, SNAPSHOT.cuts.all.srcPrev, null);
-  } else {
-    document.getElementById("sourceTitle").textContent = "Active filter";
-    document.getElementById("sourceTable").innerHTML =
-      `<tr><td style="padding:14px; background:#eef3fb; border-radius:8px;">
-        <b>Viewing ${activeSource} traffic only.</b> Every number on this page — KPIs, funnel, trend, device and country tables — reflects ${activeSource} sessions exclusively.
-        <span class="pill" style="margin-left:8px; display:inline-block;" onclick="document.querySelector('[data-src=all]').click()">Show all sources</span>
-      </td></tr>`;
-  }
-  renderSplitTable("deviceTable", "Device", cut.devCur, cut.devPrev, ["mobile","desktop","tablet"]);
-
-  document.getElementById("notes").innerHTML =
-    `Weekly snapshot of Shopify data, taken ${fmtDate(SNAPSHOT.bakedAt)}. Funnel: Sessions &rarr; Add to cart &rarr; Checkout &rarr; Purchase. ` +
-    `&nbsp;&middot;&nbsp; <strong>Source caveat:</strong> Shopify's referrer classification is cruder than GA4 channels &mdash; ad-driven traffic largely lands in &lsquo;direct&rsquo;/&lsquo;social&rsquo;. Use sources for movement, GA4 for channel mix. ` +
-    `&nbsp;&middot;&nbsp; <strong>Consent caveat:</strong> Shopify sees traffic GA4 cannot (GDPR consent hides 20&ndash;40% of GA4 UK traffic) &mdash; numbers here run higher than the GA4 dashboard by design. ` +
-    `&nbsp;&middot;&nbsp; <strong>Revenue at risk</strong> = what one month of the current gap is worth if it persists, assuming an average order of £100. It is a sizing tool for prioritising tests, not a forecast &mdash; one week of data cannot justify an annual figure. &lsquo;Drop began&rsquo; dates are estimates from daily step-conversion vs the 4-week baseline.`;
-}
-
-function renderKpis(cur, baseW, yy){
-  const cvrNow = cur.sessions? cur.purchase/cur.sessions : 0;
-  const cvrBase = baseW.sessions? baseW.purchase/baseW.sessions : 0;
-  const cvrYoy = yy.sessions? yy.purchase/yy.sessions : 0;
-  const defs = [
-    { label:"Sessions", value:fmtInt(cur.sessions), w:relDelta(cur.sessions,baseW.sessions), y:relDelta(cur.sessions,yy.sessions) },
-    { label:"Conversion rate (session → purchase)", value:pct(cvrNow), w:relDelta(cvrNow,cvrBase), y:relDelta(cvrNow,cvrYoy) },
-    { label:"Purchases", value:fmtInt(cur.purchase), w:relDelta(cur.purchase,baseW.purchase), y:relDelta(cur.purchase,yy.purchase) },
-    { label:"Add-to-cart rate", value:pct(cur.atc/Math.max(cur.sessions,1)), w:relDelta(cur.atc/Math.max(cur.sessions,1), baseW.atc/Math.max(baseW.sessions,1)), y:relDelta(cur.atc/Math.max(cur.sessions,1), yy.atc/Math.max(yy.sessions,1)) },
-  ];
-  document.getElementById("kpis").innerHTML = defs.map(k=>{
-    const primary = cmpMode==="yoy" ? k.y : k.w;
-    const cls = primary===null? "" : primary > 0.02 ? "kpi-up" : primary < -0.02 ? "kpi-down" : "";
-    const parts = [];
-    if (cmpMode!=="yoy") parts.push(`<span class="${deltaCls(k.w)}">${fmtSigned(k.w)} vs recent avg</span>`);
-    if (cmpMode!=="wow") parts.push(`<span class="${deltaCls(k.y)}">${fmtSigned(k.y)} vs last year</span>`);
-    return `<div class="kpi ${cls}">
-      <div class="kpi-label">${k.label}</div>
-      <div class="kpi-value">${k.value}</div>
-      <div class="kpi-delta">${parts.join(" &nbsp;")}</div>
-    </div>`;
-  }).join("");
-}
-
-// Worst funnel step vs the 4-week baseline, with the segment most responsible.
-// Shared by the verdict block, the funnel hero and the red-flag hints.
-function weakestLink(cur, base, cut){
-  let worst = null;
-  for (const def of STEP_DEFS){
-    const d = relDelta(stepCR(cur,def), stepCR(base,def));
-    if (d!==null && (!worst || d < worst.d)) worst = { def, d, cv:stepCR(cur,def) };
-  }
-  if (!worst) return null;
-  worst.startDate = findChangeDate(cut.daily, worst.def, stepCR(base, worst.def));
-  worst.devW = worstSegmentForStep(cut.devCur, cut.devPrev, worst.def);
-  worst.srcW = (activeSource==="all") ? worstSegmentForStep(SNAPSHOT.cuts.all.srcCur, SNAPSHOT.cuts.all.srcPrev, worst.def) : null;
-  return worst;
-}
-function segmentHint(wk){
-  const bits = [];
-  if (wk.devW && wk.devW.d < -0.03) bits.push(`worst on ${wk.devW.name} (${fmtSigned(wk.devW.d)} vs the week before)`);
-  if (wk.srcW && wk.srcW.d < -0.03) bits.push(`worst from ${wk.srcW.name} traffic (${fmtSigned(wk.srcW.d)} vs the week before)`);
-  return bits.join("; ");
-}
-function describeDelta(d, vs){
-  if (d===null) return `no comparison available ${vs}`;
-  if (Math.abs(d) < 0.005) return `level ${vs}`;
-  return `${d>0?"up":"down"} ${(100*Math.abs(d)).toFixed(1)}% ${vs}`;
-}
-
-function renderVerdict(cur, baseW, yy, base, cut){
-  const dW = relDelta(cur.purchase, baseW.purchase);
-  const dY = relDelta(cur.purchase, yy.purchase);
-  let tag, cls;
-  if ((dW??0) < -0.05 || (dY??0) < -0.10){ tag = "Concern"; cls = "verdict-bad"; }
-  else if ((dW??0) > 0.05 && (dY??0) >= 0){ tag = "Good week"; cls = "verdict-good"; }
-  else { tag = "Steady"; cls = "verdict-neutral"; }
-
-  const headline = `${fmtInt(cur.purchase)} purchases last week — ${describeDelta(dW, "on a typical recent week")}, ${describeDelta(dY, "on the same week last year")}.`;
-
-  const wk = weakestLink(cur, base, cut);
-  let weakLine;
-  if (wk && wk.d < -0.02){
-    const hint = segmentHint(wk);
-    weakLine = `Weakest link: <b>${wk.def.label}</b>, now ${pct(wk.cv,1)} (${fmtSigned(wk.d)} vs recent avg)`
-      + (hint ? ` — ${hint}` : "")
-      + (wk.startDate ? `. The slide started around ${fmtDate(wk.startDate)}.` : ".");
-  } else {
-    weakLine = `No funnel step is meaningfully below its recent norm.`;
-  }
-
-  const topTest = (typeof topCands !== "undefined" && topCands.length) ? topCands[0] : null;
-  let action = "";
-  if (topTest){
-    const matchesWeak = wk && topTest.title === `${wk.def.area} test`;
-    action = matchesWeak
-      ? `What to do about it: this week's weak link is exactly what <a href="#testIdeas">Test #1 — ${topTest.title}</a> targets (~£${fmtInt(topTest.impact)} at risk per month if it persists).`
-      : `Biggest £ exposure this week: <a href="#testIdeas">Test #1 — ${topTest.title}</a> (~£${fmtInt(topTest.impact)} at risk per month if it persists) — see the test list below.`;
-  }
-
+// ---- 01 story ----
+function platWeek(src,from,to){ return sumPlat(SNAPSHOT.platform?SNAPSHOT.platform[src].daily:[],from,to); }
+let revInfo=null;
+(function renderStory(){
+  // revenue + AOV (web+app)
+  let revHtml="";
+  if(SNAPSHOT.platform){ const w=platWeek("web",curFrom,curTo),a=platWeek("app",curFrom,curTo);
+    const rev=w.revenue+a.revenue, ord=w.orders+a.orders, aov=ord?rev/ord:0;
+    const wp=platWeek("web",baseFrom,baseTo),ap=platWeek("app",baseFrom,baseTo); const revBaseW=(wp.revenue+ap.revenue)/4;
+    revInfo={rev,ord,aov,web:w.revenue,app:a.revenue,appShare:ord?a.orders/(ord):0, dRev:relDelta(rev,revBaseW)}; }
+  const cvrNow=cur.sessions?cur.purchase/cur.sessions:0, cvrBase=baseW.sessions?baseW.purchase/baseW.sessions:0;
+  const dCvr=relDelta(cvrNow,cvrBase), dPur=relDelta(cur.purchase,baseW.purchase);
+  // verdict
+  let tag="Steady",cls="";
+  if((dPur??0)<-0.05){tag="Watch";cls="bad";} else if((dPur??0)>0.05){tag="Good week";cls="good";}
+  const revLine = revInfo? `Revenue is ${revInfo.dRev>0.02?"up":revInfo.dRev<-0.02?"down":"holding"} at £${(revInfo.rev/1e6).toFixed(2)}m while traffic is under pressure` : "Conversion is holding while traffic is under pressure";
   document.getElementById("verdict").innerHTML =
-    `<span class="verdict-tag ${cls}">${tag}</span>` +
-    `<h2>${headline}</h2>` +
-    `<div class="v-line">${weakLine}</div>` +
-    (action ? `<div class="v-line v-action">${action}</div>` : "");
-}
-
-function renderFunnelStrip(cur, baseW, yy, base, cut){
-  const moves = STEP_DEFS.map((def,i)=>({ idx:i+1, d: relDelta(stepCR(cur,def), stepCR(base,def)) }));
-  const worst = moves.reduce((w,m)=> (m.d!==null && (!w || m.d<w.d)) ? m : w, null);
-  const best  = moves.reduce((b,m)=> (m.d!==null && (!b || m.d>b.d)) ? m : b, null);
-  const bnIdx = worst && worst.d < -0.05 ? worst.idx : -1;
-  const winIdx = best && best.d > 0.05 ? best.idx : -1;
-  const wk = weakestLink(cur, base, cut);
-  const steps = [
-    { label:"Sessions", val:cur.sessions, w:relDelta(cur.sessions,baseW.sessions), y:relDelta(cur.sessions,yy.sessions) },
-    { label:"Add to cart", val:cur.atc, w:relDelta(cur.atc,baseW.atc), y:relDelta(cur.atc,yy.atc) },
-    { label:"Checkout", val:cur.checkout, w:relDelta(cur.checkout,baseW.checkout), y:relDelta(cur.checkout,yy.checkout) },
-    { label:"Purchase", val:cur.purchase, w:relDelta(cur.purchase,baseW.purchase), y:relDelta(cur.purchase,yy.purchase) },
-  ];
-  const stepCell = (s,i) => {
-    const cls = ["funnel-step"];
-    if (i===bnIdx) cls.push("bottleneck"); else if (i===winIdx && winIdx!==bnIdx) cls.push("win");
-    const tag = i===bnIdx ? " (bottleneck)" : (i===winIdx && winIdx!==bnIdx ? " (doing well)" : "");
-    const why = (i===bnIdx && wk && wk.def===STEP_DEFS[i-1]) ? segmentHint(wk) : "";
-    const lines = [];
-    if (cmpMode!=="yoy") lines.push(`<div class="step-delta ${deltaCls(s.w)}">${fmtSigned(s.w)} vs recent avg</div>`);
-    if (cmpMode!=="wow") lines.push(`<div class="step-yoy"><span class="${deltaCls(s.y)}">${fmtSigned(s.y)} vs last year</span></div>`);
-    return `<div class="${cls.join(' ')}">
-      <div class="step-label">${s.label}${tag}</div>
-      <div class="step-val">${fmtInt(s.val)}</div>
-      ${lines.join("")}
-      ${why ? `<div class="step-why">${why}</div>` : ``}
-    </div>`;
-  };
-  const arrowCell = (i) => { // conversion from step i to step i+1
-    const def = STEP_DEFS[i];
-    const cv = stepCR(cur,def);
-    const d = cmpMode==="yoy" ? relDelta(cv, stepCR(yy,def)) : relDelta(cv, stepCR(base,def));
-    return `<div class="funnel-arrow">
-      <div class="glyph">&rarr;</div>
-      <div class="cr">${pct(cv,1)}</div>
-      <div class="cr-delta ${deltaCls(d)}">${fmtSigned(d)}</div>
-    </div>`;
-  };
-  document.getElementById("funnelStrip").innerHTML =
-    steps.map((s,i)=> stepCell(s,i) + (i<3 ? arrowCell(i) : "")).join("");
-
-  // One-line diagnosis under the bottleneck step
-  const diag = document.getElementById("funnelDiagnosis");
-  if (bnIdx > 0 && wk){
-    const hint = segmentHint(wk);
-    diag.innerHTML = `<div class="funnel-diagnosis"><b>Why:</b> the drop sits at <b>${wk.def.label}</b> (${wk.def.area}), now ${pct(wk.cv,1)} of the previous step`
-      + (hint ? ` — ${hint}` : "")
-      + (wk.startDate ? `. It began around ${fmtDate(wk.startDate)} — check releases, app changes or promos from that date first.` : ".");
-    diag.innerHTML += `</div>`;
-  } else {
-    diag.innerHTML = "";
-  }
-}
-
-function asMap(rows){ const m={}; for (const r of rows) m[r[0]] = { sessions:+r[1], atc:+r[2], checkout:+r[3], purchase:+r[4] }; return m; }
-function renderSplitTable(elId, dimLabel, curRows, prevRows, only){
-  const curM = asMap(curRows), prevM = asMap(prevRows);
-  const keys = only ? only.filter(k=>curM[k]) : curRows.map(r=>r[0]).filter(k=>curM[k].sessions>100);
-  const out = [];
-  let html = `<tr><th>${dimLabel}</th><th>Sessions</th><th>Add to cart %</th><th>Conversion</th></tr>`;
-  for (const k of keys){
-    const c = curM[k], p = prevM[k];
-    const atcR = c.sessions? c.atc/c.sessions:0, cvr = c.sessions? c.purchase/c.sessions:0;
-    const pAtcR = p && p.sessions? p.atc/p.sessions:null, pCvr = p && p.sessions? p.purchase/p.sessions:null;
-    const dS = p? relDelta(c.sessions,p.sessions):null, dA = pAtcR!==null? relDelta(atcR,pAtcR):null, dC = pCvr!==null? relDelta(cvr,pCvr):null;
-    out.push({ name:k, sessions:c.sessions, cvr, dCvr:dC });
-    html += `<tr><td>${k}</td>
-      <td>${fmtInt(c.sessions)}<span class="d ${deltaCls(dS)}">${fmtSigned(dS)}</span></td>
-      <td>${pct(atcR,1)}<span class="d ${deltaCls(dA)}">${fmtSigned(dA)}</span></td>
-      <td>${pct(cvr)}<span class="d ${deltaCls(dC)}">${fmtSigned(dC)}</span></td></tr>`;
-  }
-  document.getElementById(elId).innerHTML = html;
-  return out;
-}
-
-function worstSegmentForStep(curRows, prevRows, def, minShare=0.05){
-  const curM = asMap(curRows), prevM = asMap(prevRows);
-  const total = Object.values(curM).reduce((a,v)=>a+v.sessions,0);
-  let worst = null;
-  for (const k of Object.keys(curM)){
-    const c = curM[k], p = prevM[k];
-    if (!p || c.sessions/total < minShare) continue;
-    const d = relDelta(stepCR(c,def), stepCR(p,def));
-    if (d!==null && (!worst || d < worst.d)) worst = { name:k, d, sessions:c.sessions };
-  }
-  return worst;
-}
-function worstStepForSegment(c, p){
-  let worst = null;
-  for (const def of STEP_DEFS){
-    const d = relDelta(stepCR(c,def), stepCR(p,def));
-    if (d!==null && (!worst || d < worst.d)) worst = { def, d, cur:stepCR(c,def), prev:stepCR(p,def) };
-  }
-  return worst;
-}
-
-const AOV = 100; // £
-function buildTestCands(){
-  const A = SNAPSHOT.cuts.all;
-  const today = new Date(SNAPSHOT.bakedAt + "T12:00:00");
-  const yest = addDays(today,-1);
-  const curFrom = qd(addDays(yest,-6)), curTo = qd(yest);
-  const baseFrom = qd(addDays(yest,-34)), baseTo = qd(addDays(yest,-7));
-  const yoyFrom = qd(addDays(addDays(yest,-6),-364)), yoyTo = qd(addDays(yest,-364));
-  const cur = sumRows(A.daily, curFrom, curTo);
-  const base = sumRows(A.daily, baseFrom, baseTo);
-  const yy = sumRows(A.yoy, yoyFrom, yoyTo);
-  // Impact = what one month of this gap is worth if it persists (4 weeks of current
-  // purchase volume × AOV). Deliberately NOT annualised — one week's movement is not
-  // evidence the gap lasts a year.
-  const monthValue = cur.purchase * 4 * AOV;
-
-  const cands = [];
-
-  // 1) Funnel-step candidates: gap vs 4-week baseline AND vs last year
-  for (const def of STEP_DEFS){
-    const cv = stepCR(cur,def), bv = stepCR(base,def), yv = stepCR(yy,def);
-    const dW = relDelta(cv,bv), dY = relDelta(cv,yv);
-    const worst = Math.min(dW??0, dY??0);
-    let impact, why;
-    if (worst < -0.02){
-      impact = Math.min(Math.abs(worst), 0.5) * monthValue;
-      const startDate = findChangeDate(A.daily, def, bv);
-      const vs = (dY!==null && dY < (dW??0)) ? `${fmtSigned(dY)} vs last year` : `${fmtSigned(dW)} vs recent avg`;
-      why = `${def.label} now ${pct(cv,1)} — ${vs}` + (startDate? `; drop began around ${fmtDate(startDate)}` : ``);
-    } else {
-      impact = 0.025 * monthValue;
-      why = `${def.label} stable at ${pct(cv,1)} — no decline; proactive lift opportunity`;
-    }
-    const devW = worstSegmentForStep(A.devCur, A.devPrev, def);
-    const srcW = worstSegmentForStep(A.srcCur, A.srcPrev, def);
-    let where = [];
-    if (devW && devW.d < -0.03) where.push(`worst device: <b>${devW.name}</b> (${fmtSigned(devW.d)} vs the week before)`);
-    if (srcW && srcW.d < -0.03) where.push(`worst source: <b>${srcW.name}</b> (${fmtSigned(srcW.d)} vs the week before)`);
-    cands.push({ title:`${def.area} test`, impact, why, where: where.join(" &middot; "), tests: EXAMPLE_TESTS[def.key] });
-  }
-
-  // 2) Mobile divergence
-  const devCurM = asMap(A.devCur), devPrevM = asMap(A.devPrev);
-  const mob = devCurM["mobile"], mobP = devPrevM["mobile"], desk = devCurM["desktop"], deskP = devPrevM["desktop"];
-  if (mob && mobP && desk && deskP){
-    const mD = relDelta(mob.sessions? mob.purchase/mob.sessions:0, mobP.sessions? mobP.purchase/mobP.sessions:0);
-    const dD = relDelta(desk.sessions? desk.purchase/desk.sessions:0, deskP.sessions? deskP.purchase/deskP.sessions:0);
-    if (mD!==null && dD!==null && (mD - dD) < -0.08){
-      const ws = worstStepForSegment(mob, mobP);
-      let srcLine = "";
-      if (SNAPSHOT.mobileSrc && ws){
-        const sW = worstSegmentForStep(SNAPSHOT.mobileSrc.cur, SNAPSHOT.mobileSrc.prev, ws.def);
-        if (sW) srcLine = ` &middot; worst source within mobile: <b>${sW.name}</b> (${fmtSigned(sW.d)} vs the week before)`;
-      }
-      cands.push({
-        title:"Mobile experience test",
-        impact: Math.min(Math.abs(mD - dD),0.5) * mob.purchase * 4 * AOV,
-        why:`Mobile conversion is ${fmtSigned(mD)} vs the week before while desktop is ${fmtSigned(dD)} — a mobile-specific issue, often a release bug rather than shopper behaviour`,
-        where: (ws? `where in funnel: <b>${ws.def.label}</b> (${ws.def.area}), mobile ${pct(ws.prev,1)} &rarr; ${pct(ws.cur,1)}` : "") + srcLine,
-        tests: EXAMPLE_TESTS.device });
-    }
-  }
-
-  cands.sort((a,b)=>b.impact-a.impact);
-  return cands;
-}
-
-let topCands = [];
-function renderTopTests(){
-  const cands = topCands;
-  document.getElementById("testIdeas").innerHTML = cands.slice(0,3).map((c,i)=>{
-    const prio = i===0? ["priority-high","#1"] : i===1? ["priority-med","#2"] : ["priority-low","#3"];
-    return `<div class="dd-test-card">
-      <div style="display:flex; align-items:baseline; gap:8px; margin-bottom:6px; flex-wrap:wrap;">
-        <span class="priority-pill ${prio[0]}">${prio[1]}</span>
-        <strong>${c.title}</strong>
-        <span style="margin-left:auto; color:#065f46; font-weight:700;">~£${fmtInt(c.impact)} at risk / month</span>
-      </div>
-      <div style="font-size:12px; color:#4b5563; margin-bottom:2px;">${c.why}</div>
-      ${c.where? `<div class="attrib">${c.where}</div>` : ``}
-      <div style="font-size:12px;">Try: ${c.tests.join(" &middot; ")}</div>
-    </div>`;
+    `<span class="tag ${cls}">${tag}</span><h2>${revLine} — the risk is reach, not the website.</h2>`+
+    `<p>The funnel and basket are healthy; fewer people are arriving. The clearest lever is acquisition (see <b>Traffic</b>), not on-site conversion.</p>`;
+  // cards
+  const cards=[];
+  if(revInfo){ cards.push({label:"Revenue / week",big:`£${(revInfo.rev/1e6).toFixed(2)}m`,d:revInfo.dRev,so:`Web £${fmtInt(revInfo.web)} · App £${fmtInt(revInfo.app)}. Holding up better than traffic.`});
+    cards.push({label:"Avg order value",big:`£${Math.round(revInfo.aov)}`,d:null,so:`Basket size steady — the slide isn't a discounting problem.`}); }
+  cards.push({label:"Conversion (sess → purchase)",big:pct(cvrNow),d:dCvr,so:`On-site conversion is holding while traffic falls — the issue is upstream.`});
+  if(SNAPSHOT.platform){ const a=platWeek("app",curFrom,curTo),w=platWeek("web",curFrom,curTo); const sh=(a.orders+w.orders)?a.orders/(a.orders+w.orders):0;
+    cards.push({label:"App share of orders",big:pct(sh,1),d:null,u:true,so:`~⅓ of orders run through the app — outside the web funnel below.`}); }
+  document.getElementById("cards").innerHTML = cards.slice(0,4).map(c=>{
+    const dh = c.d===null?"":`<div class="delta ${deltaCls(c.d)}">${fmtSigned(c.d)} vs recent avg</div>`;
+    return `<div class="icard"><div class="label">${c.label}</div><div class="big ${c.u?'u':''}">${c.big}</div>${dh||'<div class="delta flat">&nbsp;</div>'}<div class="so">${c.so}</div></div>`;
   }).join("");
+  // movers
+  const sc=asMap(A.srcCur),sp=asMap(A.srcPrev); const mv=[];
+  for(const k of ["direct","search","social"]){ if(sc[k]&&sp[k]){ const ds=relDelta(sc[k].sessions,sp[k].sessions); mv.push({k,type:"sessions",d:ds}); } }
+  mv.sort((a,b)=>a.d-b.d); const worstSrc=mv[0];
+  // best cvr source
+  let bestC=null; for(const k of ["direct","search","social"]){ if(sc[k]&&sp[k]){ const dc=relDelta(sc[k].purchase/sc[k].sessions, sp[k].purchase/sp[k].sessions); if(bestC===null||dc>bestC.d) bestC={k,d:dc}; } }
+  // mobile vs desktop cvr
+  const dv=asMap(A.devCur),dvp=asMap(A.devPrev); let mob=null,desk=null;
+  if(dv.mobile&&dvp.mobile) mob=relDelta(dv.mobile.purchase/dv.mobile.sessions,dvp.mobile.purchase/dvp.mobile.sessions);
+  if(dv.desktop&&dvp.desktop) desk=relDelta(dv.desktop.purchase/dv.desktop.sessions,dvp.desktop.purchase/dvp.desktop.sessions);
+  const movers=[];
+  if(worstSrc) movers.push({cls:"neg",mk:"▼",html:`<b>${worstSrc.k} traffic ${fmtSigned(worstSrc.d)}</b> week-on-week — the biggest source move, ${worstSrc.d<0?"and a drag on the week":"a tailwind"}.`});
+  if(bestC) movers.push({cls:bestC.d>=0?"pos":"neg",mk:bestC.d>=0?"▲":"▼",html:`<b>${bestC.k} converting ${fmtSigned(bestC.d)}</b> vs the week before — the strongest conversion shift by source.`});
+  if(mob!==null&&desk!==null) movers.push({cls:(mob<desk)?"neg":"pos",mk:(mob<desk)?"📱":"▲",html:`<b>Mobile vs desktop</b> — desktop conversion <span class="${deltaCls(desk)}">${fmtSigned(desk)}</span>, mobile <span class="${deltaCls(mob)}">${fmtSigned(mob)}</span>; mobile carries the volume.`});
+  document.getElementById("movers").innerHTML = movers.map(m=>`<div class="mover ${m.cls}"><span class="mk">${m.mk}</span><div class="mt">${m.html}</div></div>`).join("");
+})();
+
+// ---- 02 funnel ----
+const fdat=[ {lab:"Sessions",val:cur.sessions,k:"sessions"},{lab:"Add to cart",val:cur.atc,k:"atc"},{lab:"Checkout",val:cur.checkout,k:"checkout"},{lab:"Purchase",val:cur.purchase,k:"purchase"} ];
+const ACTIONS={ sessions:"Acquisition, not the website — see the Traffic deep-dive for the paid-vs-organic read.",
+  atc:"PLP / PDP merchandising — imagery order, size guidance, reviews placement, price anchoring.",
+  checkout:"Cart UX — shipping-threshold messaging, cross-sell friction, discount-code field placement.",
+  purchase:"Checkout — express-pay prominence, payment options, shipping cost/speed clarity." };
+(function buildFunnel(){
+  let h=""; const arrows=[STEP_DEFS[0],STEP_DEFS[1],STEP_DEFS[2]];
+  fdat.forEach((s,i)=>{ const dW=relDelta(s.val,baseW[s.k]||baseW[["sessions","atc","checkout","purchase"][i]]);
+    h+=`<div class="fstep" data-step="${s.k}"><div class="s-lab">${s.lab}</div><div class="s-val">${fmtInt(s.val)}</div><div class="s-d ${deltaCls(dW)}">${fmtSigned(dW)}</div></div>`;
+    if(i<3){ const cr=stepCR(cur,arrows[i]); h+=`<div class="farrow"><div class="gl">→</div><div class="cr">${pct(cr,1)}</div></div>`; } });
+  document.getElementById("funnel").innerHTML=h;
+  document.querySelectorAll(".fstep").forEach(el=>el.addEventListener("click",()=>selStep(el.dataset.step)));
+  selStep("atc");
+})();
+function selStep(k){
+  document.querySelectorAll(".fstep").forEach(x=>x.classList.toggle("sel",x.dataset.step===k));
+  let title,crline,body;
+  if(k==="sessions"){ const d=relDelta(cur.sessions,baseW.sessions); title="Sessions — top of funnel"; crline=`${fmtInt(cur.sessions)} this week · ${fmtSigned(d)} vs recent avg`;
+    const ws=worstSeg(A.srcCur,A.srcPrev,STEP_DEFS[0]); body=`The reach problem. ${ws?`Weakest from <b>${ws.name}</b> traffic. `:""}Visitors are down over the longer trend while frequency holds — fewer people, not less engagement.`; }
+  else { const def=STEP_DEFS.find(x=>x.key===k); const cr=stepCR(cur,def),bcr=stepCR(base,def),d=relDelta(cr,bcr);
+    const wd=worstSeg(A.devCur,A.devPrev,def), wsrc=worstSeg(A.srcCur,A.srcPrev,def);
+    title=def.label+(k==="atc"?" — lowest-converting step":""); crline=`${pct(cr,1)} · ${fmtSigned(d)} vs recent avg`;
+    const bits=[]; if(wd&&wd.d<-0.02) bits.push(`worst on <b>${wd.name}</b> (${fmtSigned(wd.d)})`); if(wsrc&&wsrc.d<-0.02) bits.push(`worst from <b>${wsrc.name}</b> traffic (${fmtSigned(wsrc.d)})`);
+    body=`This step converts ${pct(cr,1)} of the previous one${k==="atc"?" — the steepest drop-off in any funnel, so a standing merchandising lever rather than this week's issue":""}.${bits.length?" Currently "+bits.join("; ")+".":""}`; }
+  document.getElementById("drill").innerHTML=`<div class="d-h">${title}</div><div class="d-cr">${crline}</div><p>${body}</p><div class="d-act"><b>What to do:</b> ${ACTIONS[k]}</div>`;
 }
 
-// Channel CVR section: in-session vs first-acquisition, from GA4 (static, all-traffic)
-function renderChannelCvr(){
-  const G = SNAPSHOT.ga4Channels;
-  if (!G || !G.firstTouch) return;
-  document.getElementById("cvrBlock").style.display = "block";
-  let totU=0, totFtP=0, totS=0, totIsP=0;
-  for (const ch of Object.keys(G.firstTouch)){
-    const f=G.firstTouch[ch], s=G.inSession[ch];
-    totU+=f.users; totFtP+=f.purchases;
-    if (s){ totS+=s.sessions; totIsP+=s.purchases; }
-  }
-  const globalFt = totU? totFtP/totU : 0;
-  const globalIs = totS? totIsP/totS : 0;
-  const baseline = globalIs? globalFt/globalIs : 1;
-  const rows = Object.keys(G.firstTouch)
-    .map(ch => {
-      const f = G.firstTouch[ch], s = G.inSession[ch];
-      return { ch, users: f.users, ft: f.users? f.purchases/f.users : null,
-               is: s && s.sessions? s.purchases/s.sessions : null };
-    })
-    .filter(r => r.users > 1000)
-    .sort((a,b)=>b.users-a.users).slice(0,10);
-  function role(r){
-    if (r.ft===null || r.is===null || r.is===0) return ["–",""];
-    const m = (r.ft/r.is)/baseline;
-    if (m >= 1.25) return ["Discovery", "brings people in who buy later"];
-    if (m <= 0.80) return ["Closer", "tends to convert within the visit"];
-    return ["Balanced", "introduces and closes in similar measure"];
-  }
-  let html = `<tr><th>Channel (GA4 web)</th><th>Users (90d)</th><th>First-visit CVR</th><th>In-visit CVR</th><th>Role</th></tr>`;
-  for (const r of rows){
-    const [label, blurb] = role(r);
-    const isDirect = r.ch.toLowerCase()==="direct";
-    const flag = isDirect
-      ? ` <span style="color:#b45309; cursor:pointer; font-weight:600;" onclick="var x=document.getElementById('directWhy'); x.style.display=(x.style.display==='table-row'?'none':'table-row');">&#9888; caution</span>`
-      : "";
-    html += `<tr><td>${r.ch}${flag}</td>
-      <td>${fmtInt(r.users)}</td>
-      <td><b>${r.ft!==null? pct(r.ft):"–"}</b></td>
-      <td>${r.is!==null? pct(r.is):"–"}</td>
-      <td>${label}${blurb? `<span style="color:#9ca3af;"> — ${blurb}</span>`:""}</td></tr>`;
-    if (isDirect){
-      html += `<tr id="directWhy" style="display:none;"><td colspan="5" style="background:#fffbeb; font-size:11.5px; color:#92400e; line-height:1.55; padding:10px 12px;">
-        <b>Why Direct is unreliable here:</b> &lsquo;Direct&rsquo; is GA4&rsquo;s catch-all for visits it can&rsquo;t attribute — returning customers typing the address, bookmarks, in-app webviews, links opened from messaging apps, and traffic lost to GDPR consent refusal all land here. Its high first-visit conversion is mostly people who already knew Oh Polly, not a channel you can scale. Treat this row as a measurement gap, not an acquisition win.
-      </td></tr>`;
-    }
-  }
-  html += `<tr><td colspan="5" style="font-size:11px; color:#9ca3af; line-height:1.5;">`
-    + `<b>First-visit CVR:</b> of people whose first ever visit came via this channel, the share who later bought (via any channel). `
-    + `<b>In-visit CVR:</b> purchases per visit arriving on the channel. `
-    + `<b>Role</b> compares the two against the all-channel average — first-visit runs about ${baseline.toFixed(1)}&times; higher than in-visit because shoppers average ~${baseline.toFixed(1)} visits each, so that ratio, not 1&times;, is neutral. &lsquo;Discovery&rsquo; = value lands after the first visit; &lsquo;Closer&rsquo; = converts in the moment. `
-    + `<b>GA4 Oh Polly UK web only — excludes the Tapcart app</b>, so app sessions and app purchases are not counted here. Consent mode hides 20&ndash;40% of UK traffic. Window ${G.window.start} &rarr; ${G.window.end}.`
-    + `</td></tr>`;
-  document.getElementById("cvrTable").innerHTML = html;
-}
+// ---- 03 panels ----
+(function revPanel(){
+  const el=document.getElementById("revPanel");
+  if(!revInfo){ el.innerHTML='<h3>Revenue &amp; AOV</h3><div class="note">Revenue data not in this bake.</div>'; return; }
+  el.innerHTML=`<h3>Revenue &amp; AOV</h3><div class="bigrow"><div><div class="v">£${(revInfo.rev/1e6).toFixed(2)}m</div><div class="k">this week (web + app)</div></div><div><div class="v">£${Math.round(revInfo.aov)}</div><div class="k">avg order value</div></div></div><div class="note">Web £${fmtInt(revInfo.web)} · App £${fmtInt(revInfo.app)}. Revenue is holding while sessions fall — watch for the lag if traffic keeps sliding.</div>`;
+})();
+(function reviewPanel(){
+  const el=document.getElementById("reviewPanel"); const R=SNAPSHOT.reviews;
+  if(!R||!R.daily){ el.innerHTML='<h3>Customer reviews</h3><div class="note">Run fetch_okendo_reviews.py to enable.</div>'; return; }
+  const vals=Object.values(R.daily); const tot=vals.reduce((a,v)=>a+(v.new||0)+(v.existing||0),0); const days=vals.length; const tn=vals.reduce((a,v)=>a+(v.new||0),0);
+  el.innerHTML=`<h3>Customer reviews</h3><div class="bigrow"><div><div class="v">${fmtInt(Math.round(tot/(days||1)))}/day</div><div class="k">reviews captured</div></div><div><div class="v">${tot?(tn/tot*100).toFixed(1):0}%</div><div class="k">on new products</div></div></div><div class="note">${fmtInt(tot)} reviews over ${days} days. New drops build reviews slowly. <a onclick="openDive('reviews')">See trend →</a></div>`;
+})();
 
-let weeklyChart = null;
-function renderWeekly(){
-  const W = SNAPSHOT.weekly;
-  if (!W || !W.rows || !W.rows.length){
-    document.getElementById("weeklyTable").innerHTML =
-      `<tr><td style="padding:14px; color:#6b7280;">Weekly data not available in this bake.</td></tr>`;
-    return;
-  }
-  const rows = W.rows.map(r => {
-    const sessions=+r[1], atc=+r[2], reached=+r[3], completed=+r[4];
-    return { week:r[0], sessions, atcRate: sessions? atc/sessions:0, ccRate: reached? completed/reached:0 };
-  });
-  const labels = rows.map(r => fmtDate(r.week));
-  const cc  = rows.map(r => +(r.ccRate*100).toFixed(2));
-  const atc = rows.map(r => +(r.atcRate*100).toFixed(2));
-  if (weeklyChart) weeklyChart.destroy();
-  try {
-    weeklyChart = new Chart(document.getElementById("weeklyChart"), {
-      type:"line",
-      data:{ labels, datasets:[
-        { label:"Checkout completion %", data:cc, yAxisID:"yCC", borderColor:"#0F6E56", backgroundColor:"rgba(15,110,86,0.05)", borderWidth:2, pointRadius:2, tension:0.25, fill:false },
-        { label:"Add-to-cart %", data:atc, yAxisID:"yATC", borderColor:"#185FA5", borderDash:[5,4], borderWidth:2, pointRadius:2, tension:0.25, fill:false },
-      ]},
-      options:{ responsive:true, maintainAspectRatio:false,
-        plugins:{ legend:{ display:false },
-          tooltip:{ callbacks:{ label:c => `${c.dataset.label.replace(' %','')}: ${c.parsed.y.toFixed(1)}%` } } },
-        scales:{
-          yCC:{ position:"left", ticks:{ callback:v=>v.toFixed(0)+"%", font:{size:10} }, title:{ display:true, text:"Checkout completion" } },
-          yATC:{ position:"right", grid:{ drawOnChartArea:false }, ticks:{ callback:v=>v.toFixed(0)+"%", font:{size:10} }, title:{ display:true, text:"Add-to-cart" } },
-          x:{ ticks:{ font:{size:9}, maxRotation:45, autoSkip:true, autoSkipPadding:8 } },
-        },
-      },
-    });
-  } catch(e){ document.getElementById("weeklyChart").parentElement.innerHTML = '<div style="padding:20px;color:#6b7280;font-size:12px;">Chart unavailable — the table below is unaffected.</div>'; }
-  document.getElementById("weeklyLegend").innerHTML =
-    `<span style="display:flex;align-items:center;gap:5px;"><span style="width:14px;height:2px;background:#0F6E56;display:inline-block;"></span>Checkout completion %</span>`
-    + `<span style="display:flex;align-items:center;gap:5px;"><span style="width:14px;height:0;border-top:2px dashed #185FA5;display:inline-block;"></span>Add-to-cart %</span>`;
-  let html = `<tr><th>Week of</th><th>Sessions</th><th>Add-to-cart %</th><th>Checkout completion %</th></tr>`;
-  for (let i=rows.length-1; i>=0; i--){
-    const r=rows[i], p=rows[i-1];
-    const dS = p? relDelta(r.sessions, p.sessions):null;
-    const dA = p? relDelta(r.atcRate,  p.atcRate):null;
-    const dC = p? relDelta(r.ccRate,   p.ccRate):null;
-    html += `<tr><td>${fmtDate(r.week)}</td>
-      <td>${fmtInt(r.sessions)}<span class="d ${deltaCls(dS)}">${fmtSigned(dS)}</span></td>
-      <td>${pct(r.atcRate,1)}<span class="d ${deltaCls(dA)}">${fmtSigned(dA)}</span></td>
-      <td>${pct(r.ccRate,1)}<span class="d ${deltaCls(dC)}">${fmtSigned(dC)}</span></td></tr>`;
-  }
-  document.getElementById("weeklyTable").innerHTML = html;
+// ---- deep dives ----
+const dives=[ {k:"traffic",name:"Traffic",stat:"15-wk",teaser:"Sessions vs visitors; the reach trend behind the slide."},
+  {k:"channels",name:"Channels",stat:"GA4",teaser:"How each channel converts — first-visit vs in-visit."},
+  {k:"collections",name:"Collections",stat:"25",teaser:"Per-collection sessions, ATC and conversion."},
+  {k:"reviews",name:"Reviews",stat:"daily",teaser:"Reviews captured per day, new vs existing products."} ];
+document.getElementById("dives").innerHTML=dives.map(d=>`<div class="dive" data-dive="${d.k}"><div class="d-top"><span class="d-name">${d.name}</span><span class="d-stat">${d.stat}</span></div><div class="d-teaser">${d.teaser}</div><div class="d-link">Tap to open →</div></div>`).join("");
+document.querySelectorAll(".dive").forEach(c=>c.addEventListener("click",()=>openDive(c.dataset.dive)));
+function openDive(k){
+  document.querySelectorAll(".dive").forEach(x=>x.classList.toggle("sel-d",x.dataset.dive===k));
+  const host=document.getElementById("diveDetail"); host.innerHTML='<div class="dd" id="ddinner"></div>'; const inner=document.getElementById("ddinner");
+  if(k==="channels") inner.innerHTML=channelsHTML();
+  else if(k==="collections") inner.innerHTML=collectionsHTML();
+  else if(k==="traffic"){ inner.innerHTML=`<h4>Traffic — last weeks</h4><div class="sub">Sessions vs visitors (Shopify, settled weeks)</div><div class="chart-box"><canvas id="ddTraffic"></canvas></div>`; drawTraffic(); }
+  else if(k==="reviews"){ inner.innerHTML=`<h4>Product reviews — Okendo</h4><div class="sub">Reviews captured per day · existing vs new products</div><div class="chart-box"><canvas id="ddReviews"></canvas></div>`; drawReviews(); }
+  host.scrollIntoView({behavior:"smooth",block:"nearest"});
 }
-
-function renderCollections(){
-  const C = SNAPSHOT.collections;
-  const el = document.getElementById("collectionsTable");
-  if (!C || !C.rows || !C.rows.length){ el.innerHTML = `<tr><td style="padding:14px;color:#6b7280;">Collection data not available in this bake.</td></tr>`; return; }
-  const name = h => h.replace(/-/g," ").replace(/\b\w/g, c=>c.toUpperCase());
-  let html = `<tr><th>Collection</th><th>Products</th><th>On sale %</th><th>Sessions</th><th>ATC %</th><th>Checkout %</th><th>CVR</th></tr>`;
-  for (const r of C.rows){
-    const handle=r[0], prod=r[1], s=+r[2], atc=+r[3], reached=+r[4], comp=+r[5];
-    const atcR = s? atc/s : 0, cc = reached? comp/reached : 0, cvr = s? comp/s : 0;
-    html += `<tr>
-      <td><a href="https://www.ohpolly.com/collections/${handle}" style="color:#2456a6;">${name(handle)}</a></td>
-      <td>${prod? fmtInt(+prod):"–"}</td>
-      <td>${(C.discount && C.discount[handle]!=null)? C.discount[handle]+"%" : "–"}</td>
-      <td>${fmtInt(s)}</td>
-      <td>${pct(atcR,1)}</td>
-      <td>${pct(cc,1)}</td>
-      <td>${pct(cvr,2)}</td></tr>`;
-  }
-  el.innerHTML = html;
+function channelsHTML(){
+  const G=SNAPSHOT.ga4Channels; if(!G||!G.firstTouch) return '<h4>Channels</h4><div class="note">GA4 channel data not in this bake.</div>';
+  let tu=0,tf=0,ts=0,ti=0; for(const ch of Object.keys(G.firstTouch)){ const f=G.firstTouch[ch],s=G.inSession[ch]; tu+=f.users;tf+=f.purchases; if(s){ts+=s.sessions;ti+=s.purchases;} }
+  const baseline=(ti&&ts&&tu)?(tf/tu)/(ti/ts):1;
+  const rows=Object.keys(G.firstTouch).map(ch=>{ const f=G.firstTouch[ch],s=G.inSession[ch]; return {ch,users:f.users,ft:f.users?f.purchases/f.users:null,is:s&&s.sessions?s.purchases/s.sessions:null}; }).filter(r=>r.users>1000).sort((a,b)=>b.users-a.users).slice(0,8);
+  function role(r){ if(r.ft===null||r.is===null||r.is===0) return "–"; const m=(r.ft/r.is)/baseline; return m>=1.25?"Discovery":m<=0.8?"Closer":"Balanced"; }
+  let h='<h4>How each marketing channel converts</h4><div class="sub">GA4 web, last 90 days · first-visit (introduces a buyer) vs in-visit (closes)</div><table><tr><th>Channel</th><th>Users (90d)</th><th>First-visit</th><th>In-visit</th><th>Role</th></tr>';
+  for(const r of rows){ const isD=r.ch.toLowerCase()==="direct";
+    const dir=isD?` <span style="color:var(--rose);font-weight:700;cursor:pointer;" onclick="var x=document.getElementById('chDirectWhy');x.style.display=(x.style.display==='table-row'?'none':'table-row');">⚠ why?</span>`:"";
+    h+=`<tr><td>${r.ch}${dir}</td><td>${fmtInt(r.users)}</td><td><b>${r.ft!==null?pct(r.ft):"–"}</b></td><td>${r.is!==null?pct(r.is):"–"}</td><td>${role(r)}</td></tr>`;
+    if(isD) h+=`<tr id="chDirectWhy" style="display:none;"><td colspan="5" style="background:#fff;color:var(--rose-deep);font-size:11.5px;line-height:1.5;padding:9px;">Direct is GA4's catch-all — returning customers, bookmarks, in-app webviews, links from messaging apps, and traffic lost to consent refusal all land here. Its high first-visit conversion is mostly people who already knew Oh Polly, not a channel you can scale. Treat it as a measurement gap, not an acquisition win.</td></tr>`; }
+  h+=`<tr><td colspan="5" class="cap">Role compares first-visit vs in-visit against the ~${baseline.toFixed(1)}× all-channel average. Direct is GA4's catch-all (returning, app, untracked) — a measurement gap, not a scalable channel. Consent mode hides 20–40% of UK traffic. Window ${G.window.start} → ${G.window.end}.</td></tr></table>`;
+  return h;
 }
-
-let trafficChart=null;
-function _tCard(lab,val,note,bad){ return `<div class="kpi ${bad?'kpi-down':''}"><div class="kpi-label">${lab}</div><div class="kpi-value">${val}</div><div class="kpi-delta">${note}</div></div>`; }
-function renderTraffic(){
-  const T = SNAPSHOT.trafficWeekly;
-  if (!T || !T.rows || !T.rows.length){ document.getElementById("trafficStats").innerHTML='<div style="color:#6b7280;padding:12px;">Traffic data not available in this bake.</div>'; return; }
-  const rows = T.rows.map(r=>({wk:r[0], s:+r[1], v:+r[2]}));
-  const first=rows[0], last=rows[rows.length-1];
-  const sChg=(last.s-first.s)/first.s, vChg=(last.v-first.v)/first.v;
-  const spvFirst=first.s/first.v, spvLast=last.s/last.v;
-  const freqFlat = Math.abs(spvLast/spvFirst-1) < 0.03;
-  document.getElementById("trafficStats").innerHTML =
-    _tCard("Weekly sessions", fmtInt(last.s), `${fmtSigned(sChg)} over ${rows.length} weeks`, sChg<-0.02)
-    + _tCard("Weekly visitors (users)", fmtInt(last.v), `${fmtSigned(vChg)} over ${rows.length} weeks`, vChg<-0.02)
-    + _tCard("Sessions per visitor", spvLast.toFixed(2), freqFlat? "flat — frequency unchanged" : `was ${spvFirst.toFixed(2)}`, false);
-  const labels=rows.map(r=>fmtDate(r.wk));
-  if (trafficChart) trafficChart.destroy();
-  try {
-    trafficChart=new Chart(document.getElementById("trafficChart"),{type:"line",
-      data:{labels,datasets:[
-        {label:"Sessions",data:rows.map(r=>r.s),borderColor:"#185FA5",backgroundColor:"rgba(24,95,165,0.05)",borderWidth:2,pointRadius:2,tension:0.25,fill:false},
-        {label:"Visitors",data:rows.map(r=>r.v),borderColor:"#0F6E56",borderDash:[5,4],borderWidth:2,pointRadius:2,tension:0.25,fill:false},
-      ]},
-      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmtInt(c.parsed.y)}`}}},
-        scales:{y:{ticks:{callback:v=>(v/1000)+"k",font:{size:10}}},x:{ticks:{font:{size:9},maxRotation:45,autoSkip:true,autoSkipPadding:8}}}}});
-  } catch(e){ document.getElementById("trafficChart").parentElement.innerHTML='<div style="padding:20px;color:#6b7280;font-size:12px;">Chart unavailable — the numbers above are unaffected.</div>'; }
-  const dir = sChg<0? "down" : "up";
-  const peopleVsFreq = freqFlat
-    ? `The change is in <b>visitors, not visit frequency</b> — sessions per visitor has held flat at ~${spvLast.toFixed(1)} all period, so it's about how many people arrive, not how often.`
-    : `Sessions per visitor moved from ${spvFirst.toFixed(2)} to ${spvLast.toFixed(2)}, so visit frequency is shifting too.`;
-  document.getElementById("trafficHighlight").innerHTML =
-    `Sessions are ${dir} <b>${fmtSigned(sChg)}</b> and visitors ${fmtSigned(vChg)} over the last ${rows.length} weeks. ${peopleVsFreq}`;
+function collectionsHTML(){
+  const C=SNAPSHOT.collections; if(!C||!C.rows) return '<h4>Collections</h4><div class="note">Not in this bake.</div>';
+  const M=(SNAPSHOT.collectionMeta&&SNAPSHOT.collectionMeta.by)||{}; const asOf=SNAPSHOT.collectionMeta?SNAPSHOT.collectionMeta.asOf:"";
+  const nm=h=>h.replace(/-/g," ").replace(/\b\w/g,c=>c.toUpperCase());
+  let h=`<h4>Collection performance — last 30 days</h4><div class="sub">Behaviour (Shopify, live) + catalogue attributes (as of ${asOf}) · top by traffic</div><table><tr><th>Collection</th><th>Products</th><th>On sale %</th><th>Newest</th><th>Sessions</th><th>ATC %</th><th>CVR</th></tr>`;
+  for(const r of C.rows.slice(0,15)){ const handle=r[0],prodC=r[1],s=+r[2],atc=+r[3],comp=+r[5]; const m=M[handle];
+    const active=m&&m[0]!=null?m[0]:(prodC?+prodC:null);
+    const onsale=m&&m[3]!=null?m[3].toFixed(0)+"%":"–";
+    const dnew=m&&m[2]!=null?m[2]+"d":"–";
+    const flag=m&&m[5]?` <span style="font-size:10px;color:var(--bad);font-weight:600;">${m[5].split(";")[0]}</span>`:"";
+    h+=`<tr><td>${nm(handle)}${flag}</td><td>${active!=null?fmtInt(active):"–"}</td><td>${onsale}</td><td>${dnew}</td><td>${fmtInt(s)}</td><td>${pct(s?atc/s:0,1)}</td><td>${pct(s?comp/s:0,2)}</td></tr>`; }
+  h+=`<tr><td colspan="7" class="cap">On sale % = products with a compare-at (markdown) price. Newest = days since the most recent product was added (lower = fresher). Collections refreshed in the last 30 days convert ~0.76% vs ~0.41% when stale — freshness drives conversion. Behaviour window ${C.window?C.window.start+" → "+C.window.end:""}; catalogue as of ${asOf}.</td></tr></table>`;
+  return h;
 }
+let _tc=null,_rc=null;
+function drawTraffic(){ const W=SNAPSHOT.trafficWeekly; if(!W||!W.rows) return; const r=W.rows.map(x=>({w:x[0],s:+x[1],v:+x[2]}));
+  if(_tc)_tc.destroy(); _tc=new Chart(document.getElementById("ddTraffic"),{type:"line",data:{labels:r.map(x=>fmtDate(x.w)),datasets:[
+    {label:"Sessions",data:r.map(x=>x.s),borderColor:"#b14f6b",borderWidth:2,pointRadius:2,tension:.25},
+    {label:"Visitors",data:r.map(x=>x.v),borderColor:"#0e6e48",borderDash:[5,4],borderWidth:2,pointRadius:2,tension:.25}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{boxWidth:12,font:{size:11}}}},scales:{y:{ticks:{callback:v=>(v/1000)+"k",font:{size:10}}},x:{ticks:{font:{size:9},maxRotation:45,autoSkip:true}}}}}); }
+function drawReviews(){ const R=SNAPSHOT.reviews; if(!R||!R.daily) return; const ds=Object.keys(R.daily).sort(); const rows=ds.map(d=>({d,n:R.daily[d].new||0,e:R.daily[d].existing||0}));
+  if(_rc)_rc.destroy(); _rc=new Chart(document.getElementById("ddReviews"),{type:"bar",data:{labels:rows.map(x=>fmtDate(x.d)),datasets:[
+    {label:"Existing",data:rows.map(x=>x.e),backgroundColor:"#b14f6b",stack:"s"},
+    {label:"New",data:rows.map(x=>x.n),backgroundColor:"#e6147a",stack:"s"}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{boxWidth:12,font:{size:11}}}},scales:{x:{stacked:true,ticks:{font:{size:8},maxRotation:90,autoSkip:true}},y:{stacked:true,ticks:{font:{size:10}}}}}}); }
 
-let reviewsChart=null;
-function renderReviews(){
-  const R = SNAPSHOT.reviews;
-  const host=document.getElementById("reviewsStats");
-  if(!R || !R.daily || !Object.keys(R.daily).length){ host.innerHTML='<div style="color:#6b7280;padding:12px;">Review data not available in this bake.</div>'; return; }
-  const dates=Object.keys(R.daily).sort();
-  const rows=dates.map(d=>({d, n:R.daily[d].new||0, e:R.daily[d].existing||0}));
-  const totNew=rows.reduce((a,r)=>a+r.n,0), totOld=rows.reduce((a,r)=>a+r.e,0), tot=totNew+totOld;
-  const days=rows.length, avg=days? tot/days : 0;
-  const pctNew = tot? totNew/tot*100 : 0;
-  const thr = R.thresholdDays||90;
-  host.innerHTML =
-    _tCard("Reviews captured", fmtInt(tot), `last ${days} days`, false)
-    + _tCard("Avg per day", fmtInt(Math.round(avg)), "approved reviews", false)
-    + _tCard("On new products", `${fmtInt(totNew)} (${pctNew.toFixed(1)}%)`, `published in last ${thr} days`, false);
-  const labels=rows.map(r=>fmtDate(r.d));
-  if(reviewsChart) reviewsChart.destroy();
-  try{
-    reviewsChart=new Chart(document.getElementById("reviewsChart"),{type:"bar",
-      data:{labels,datasets:[
-        {label:"Existing products",data:rows.map(r=>r.e),backgroundColor:"#185FA5",stack:"s"},
-        {label:"New products",data:rows.map(r=>r.n),backgroundColor:"#EF9F27",stack:"s"},
-      ]},
-      options:{responsive:true,maintainAspectRatio:false,
-        plugins:{legend:{display:false},tooltip:{mode:"index",intersect:false}},
-        scales:{x:{stacked:true,ticks:{font:{size:8},maxRotation:90,autoSkip:true,autoSkipPadding:6}},
-                y:{stacked:true,ticks:{font:{size:10}}}}}});
-  }catch(e){ document.getElementById("reviewsChart").parentElement.innerHTML='<div style="padding:20px;color:#6b7280;font-size:12px;">Chart unavailable — the numbers above are unaffected.</div>'; }
-  document.getElementById("reviewsHighlight").innerHTML =
-    `~${fmtInt(Math.round(avg))} reviews captured per day. <b>${pctNew.toFixed(1)}%</b> are on products published in the last ${thr} days — new drops generate few reviews until shoppers have received and worn them, so a low share here is expected; watch it climb as recent launches mature.`;
-}
+openDive("channels"); // open the channel detail by default so it's visible
 
-document.getElementById("tabBtns").querySelectorAll("[data-tab]").forEach(p => p.addEventListener("click", ()=>{
-  document.getElementById("tabBtns").querySelectorAll("[data-tab]").forEach(x=>x.classList.remove("active"));
-  p.classList.add("active");
-  const tab = p.dataset.tab;
-  document.getElementById("app").style.display = tab==="funnel"? "" : "none";
-  document.getElementById("weeklyTab").style.display = tab==="weekly"? "" : "none";
-  document.getElementById("collectionsTab").style.display = tab==="collections"? "" : "none";
-  document.getElementById("trafficTab").style.display = tab==="traffic"? "" : "none";
-  document.getElementById("reviewsTab").style.display = tab==="reviews"? "" : "none";
-  document.getElementById("funnelControls").style.display = tab==="funnel"? "" : "none";
-  if (tab==="weekly") renderWeekly();
-  if (tab==="collections") renderCollections();
-  if (tab==="traffic") renderTraffic();
-  if (tab==="reviews") renderReviews();
-}));
-
-function daysSince(iso, now){ return Math.round((now - new Date(iso+"T12:00:00"))/86400000); }
-function freshPill(text, stale){
-  const bg=stale?"#fffbeb":"#f0fdf4", bd=stale?"#fcd34d":"#bbf7d0", fg=stale?"#92400e":"#166534", dot=stale?"#d97706":"#16a34a";
-  return `<span style="display:inline-flex;align-items:center;gap:5px;background:${bg};border:1px solid ${bd};color:${fg};border-radius:5px;padding:2px 8px;font-size:11px;font-weight:600;margin:0 6px 4px 0;">`
-    + `<span style="width:7px;height:7px;border-radius:50%;background:${dot};display:inline-block;"></span>${text}</span>`;
-}
-function renderFreshness(){
-  const el = document.getElementById("freshness");
-  if (!el) return;
-  const now = new Date();
-  const out = [];
-  const shopAge = daysSince(SNAPSHOT.bakedAt, now);
-  const shopStale = shopAge > 2;
-  out.push(freshPill(`Shopify data: refreshed ${fmtDate(SNAPSHOT.bakedAt)}${shopStale?` — ${shopAge} days ago, may be stale`:""}`, shopStale));
-  const G = SNAPSHOT.ga4Channels;
-  if (G && G.window && G.window.end){
-    const gaAge = daysSince(G.window.end, now);
-    const gaStale = gaAge > 3;
-    out.push(freshPill(`GA4 channels: data to ${fmtDate(G.window.end)}${gaStale?` — ${gaAge} days behind`:""}`, gaStale));
-  }
-  el.innerHTML = out.join("");
-}
-
-topCands = buildTestCands();
-renderSrcBtns();
-render();
-renderFreshness();
-renderTopTests();
-renderChannelCvr();
+document.getElementById("notes").innerHTML="Oh Polly UK — Shopify (funnel, revenue, collections), GA4 (channels), Okendo (reviews). Web funnel excludes the Tapcart app. Conversion is session-based; GA4 consent mode hides 20–40% of UK traffic, so use trends over absolutes.";
 </script>
 </body>
 </html>
