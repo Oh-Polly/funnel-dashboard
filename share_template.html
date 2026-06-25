@@ -99,6 +99,7 @@
   <div class="pill" data-tab="weekly">Weekly metrics</div>
   <div class="pill" data-tab="collections">Collections</div>
   <div class="pill" data-tab="traffic">Traffic</div>
+  <div class="pill" data-tab="reviews">Reviews</div>
 </div>
 
 <div id="funnelControls">
@@ -197,6 +198,18 @@
     </ul>
   </div>
   <div class="footer-note">Shopify (Oh Polly UK online store). Visitors = unique online-store visitors. Current part-week excluded so every week is settled. Web only — excludes the Tapcart app.</div>
+</div>
+
+<div id="reviewsTab" style="display:none;">
+  <div class="section-title">Product reviews — last ~120 days (Okendo)</div>
+  <div id="reviewsHighlight" style="font-size:12.5px;color:#374151;background:#fafafa;border:1px solid #e5e7eb;border-radius:8px;padding:10px 14px;margin:0 0 12px;line-height:1.5;"></div>
+  <div class="kpis" id="reviewsStats" style="grid-template-columns:repeat(3,1fr);"></div>
+  <div style="display:flex;gap:16px;margin:4px 0;font-size:12px;color:#6b7280;">
+    <span style="display:flex;align-items:center;gap:5px;"><span style="width:12px;height:12px;border-radius:2px;background:#185FA5;display:inline-block;"></span>Existing products</span>
+    <span style="display:flex;align-items:center;gap:5px;"><span style="width:12px;height:12px;border-radius:2px;background:#EF9F27;display:inline-block;"></span>New products (published in last 90 days)</span>
+  </div>
+  <div class="chart-container" style="height:300px;"><canvas id="reviewsChart" role="img" aria-label="Daily product reviews captured, Oh Polly UK, split new vs existing products"></canvas></div>
+  <div class="footer-note">Source: Okendo (approved reviews). "New product" = Shopify product published within the threshold (currently 90 days). Reviews lag purchase, so very recent drops show few reviews until orders are delivered and worn.</div>
 </div>
 
 <script>
@@ -870,6 +883,38 @@ function renderTraffic(){
     `Sessions are ${dir} <b>${fmtSigned(sChg)}</b> and visitors ${fmtSigned(vChg)} over the last ${rows.length} weeks. ${peopleVsFreq}`;
 }
 
+let reviewsChart=null;
+function renderReviews(){
+  const R = SNAPSHOT.reviews;
+  const host=document.getElementById("reviewsStats");
+  if(!R || !R.daily || !Object.keys(R.daily).length){ host.innerHTML='<div style="color:#6b7280;padding:12px;">Review data not available in this bake.</div>'; return; }
+  const dates=Object.keys(R.daily).sort();
+  const rows=dates.map(d=>({d, n:R.daily[d].new||0, e:R.daily[d].existing||0}));
+  const totNew=rows.reduce((a,r)=>a+r.n,0), totOld=rows.reduce((a,r)=>a+r.e,0), tot=totNew+totOld;
+  const days=rows.length, avg=days? tot/days : 0;
+  const pctNew = tot? totNew/tot*100 : 0;
+  const thr = R.thresholdDays||90;
+  host.innerHTML =
+    _tCard("Reviews captured", fmtInt(tot), `last ${days} days`, false)
+    + _tCard("Avg per day", fmtInt(Math.round(avg)), "approved reviews", false)
+    + _tCard("On new products", `${fmtInt(totNew)} (${pctNew.toFixed(1)}%)`, `published in last ${thr} days`, false);
+  const labels=rows.map(r=>fmtDate(r.d));
+  if(reviewsChart) reviewsChart.destroy();
+  try{
+    reviewsChart=new Chart(document.getElementById("reviewsChart"),{type:"bar",
+      data:{labels,datasets:[
+        {label:"Existing products",data:rows.map(r=>r.e),backgroundColor:"#185FA5",stack:"s"},
+        {label:"New products",data:rows.map(r=>r.n),backgroundColor:"#EF9F27",stack:"s"},
+      ]},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false},tooltip:{mode:"index",intersect:false}},
+        scales:{x:{stacked:true,ticks:{font:{size:8},maxRotation:90,autoSkip:true,autoSkipPadding:6}},
+                y:{stacked:true,ticks:{font:{size:10}}}}}});
+  }catch(e){ document.getElementById("reviewsChart").parentElement.innerHTML='<div style="padding:20px;color:#6b7280;font-size:12px;">Chart unavailable — the numbers above are unaffected.</div>'; }
+  document.getElementById("reviewsHighlight").innerHTML =
+    `~${fmtInt(Math.round(avg))} reviews captured per day. <b>${pctNew.toFixed(1)}%</b> are on products published in the last ${thr} days — new drops generate few reviews until shoppers have received and worn them, so a low share here is expected; watch it climb as recent launches mature.`;
+}
+
 document.getElementById("tabBtns").querySelectorAll("[data-tab]").forEach(p => p.addEventListener("click", ()=>{
   document.getElementById("tabBtns").querySelectorAll("[data-tab]").forEach(x=>x.classList.remove("active"));
   p.classList.add("active");
@@ -878,10 +923,12 @@ document.getElementById("tabBtns").querySelectorAll("[data-tab]").forEach(p => p
   document.getElementById("weeklyTab").style.display = tab==="weekly"? "" : "none";
   document.getElementById("collectionsTab").style.display = tab==="collections"? "" : "none";
   document.getElementById("trafficTab").style.display = tab==="traffic"? "" : "none";
+  document.getElementById("reviewsTab").style.display = tab==="reviews"? "" : "none";
   document.getElementById("funnelControls").style.display = tab==="funnel"? "" : "none";
   if (tab==="weekly") renderWeekly();
   if (tab==="collections") renderCollections();
   if (tab==="traffic") renderTraffic();
+  if (tab==="reviews") renderReviews();
 }));
 
 function daysSince(iso, now){ return Math.round((now - new Date(iso+"T12:00:00"))/86400000); }

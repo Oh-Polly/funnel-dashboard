@@ -67,6 +67,15 @@ if os.path.exists(ft_path):
 else:
     print("No first_touch.json — dashboard's Channel CVR section will be hidden. Run fetch_first_touch.py on the Mac to enable it.")
 
+# ---------- 1c. Merge Okendo reviews if available ----------
+rev_path = os.path.join(HERE, "okendo_reviews.json")
+if os.path.exists(rev_path):
+    with open(rev_path) as f:
+        data["reviews"] = json.load(f)
+    print(f"Merged okendo_reviews.json ({len(data['reviews'].get('daily', {}))} days)")
+else:
+    print("No okendo_reviews.json — Reviews tab will be hidden. Run fetch_okendo_reviews.py to enable it.")
+
 # ---------- 2. Inject into template ----------
 with open(TEMPLATE) as f:
     html = f.read()
