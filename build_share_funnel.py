@@ -143,7 +143,7 @@ r = run(["git", "-c", "user.name=Funnel Bot", "-c", "user.email=funnel-bot@ohpol
 combined = r.stdout + r.stderr
 if r.returncode != 0:
     if ("nothing to commit" in combined or "no changes added to commit" in combined
-            or "working tree clean" in combined):
+            or "nothing added to commit" in combined or "working tree clean" in combined):
         # Files identical to the last bake — but an earlier commit may still be
         # unpushed (a prior run committed, then failed to push). Do NOT exit here:
         # fall through and push so the live site catches up.
