@@ -97,6 +97,8 @@
   <span class="label">View</span>
   <div class="pill active" data-tab="funnel">Weekly funnel</div>
   <div class="pill" data-tab="weekly">Weekly metrics</div>
+  <div class="pill" data-tab="collections">Collections</div>
+  <div class="pill" data-tab="traffic">Traffic</div>
 </div>
 
 <div id="funnelControls">
@@ -111,6 +113,7 @@
 
 <div id="app">
   <div class="verdict" id="verdict"></div>
+  <div id="srcCaveat" style="display:none; font-size:12px; background:#fffbeb; border:1px solid #fcd34d; color:#92400e; border-radius:8px; padding:10px 14px; margin:0 0 12px 0; line-height:1.5;"></div>
 
   <div class="section-title">The funnel — last 7 days <span style="text-transform:none; font-weight:400; color:#9ca3af;">(web / online-store sessions only — app shown separately below)</span></div>
   <div class="funnel-strip" id="funnelStrip"></div>
@@ -144,9 +147,6 @@
       <table id="deviceTable"></table>
     </div>
   </div>
-  <div class="section-title">Top countries — last 7 days, change vs the week before</div>
-  <table id="countryTable"></table>
-
   <div id="cvrBlock" style="display:none;">
     <div class="section-title">How each marketing channel converts — last 90 days (GA4 web, all traffic)</div>
     <div style="font-size:11.5px; color:#6b7280; margin:-2px 0 6px 0; line-height:1.5;">Two views of each channel: how often it <b>introduces</b> a customer who eventually buys (first-visit), versus how often it <b>closes</b> a sale within the visit itself (in-visit). The Role column says which job the channel mainly does.</div>
@@ -167,6 +167,36 @@
   <div class="chart-container" style="height:280px;"><canvas id="weeklyChart" role="img" aria-label="Weekly checkout completion rate and add-to-cart rate, Oh Polly UK, last 20 weeks"></canvas></div>
   <div id="weeklyLegend" style="display:flex; gap:16px; margin:4px 0 14px 0; font-size:12px; color:#6b7280;"></div>
   <table id="weeklyTable"></table>
+</div>
+
+<div id="collectionsTab" style="display:none;">
+  <div class="section-title">Collection performance — last 30 days (Oh Polly UK)</div>
+  <div style="font-size:11.5px; color:#6b7280; margin:-2px 0 10px 0; line-height:1.5;">
+    Funnel for sessions that <b>landed on</b> each collection page. <b>Products</b> = live products in the collection. <b>ATC</b> = added to cart ÷ sessions. <b>Checkout</b> = reached checkout → completed. <b>CVR</b> = sessions → purchase. Sorted by sessions — use it to spot collections pulling traffic but converting weakly.
+  </div>
+  <table id="collectionsTable"></table>
+</div>
+
+<div id="trafficTab" style="display:none;">
+  <div class="section-title">Web traffic — last 15 weeks (Shopify, settled weeks only)</div>
+  <div id="trafficHighlight" style="font-size:12.5px;color:#374151;background:#fafafa;border:1px solid #e5e7eb;border-radius:8px;padding:10px 14px;margin:0 0 12px;line-height:1.5;"></div>
+  <div class="kpis" id="trafficStats" style="grid-template-columns:repeat(3,1fr);"></div>
+  <div style="display:flex;gap:16px;margin:4px 0;font-size:12px;color:#6b7280;">
+    <span style="display:flex;align-items:center;gap:5px;"><span style="width:14px;height:2px;background:#185FA5;display:inline-block;"></span>Sessions</span>
+    <span style="display:flex;align-items:center;gap:5px;"><span style="width:14px;height:0;border-top:2px dashed #0F6E56;display:inline-block;"></span>Visitors (users)</span>
+  </div>
+  <div class="chart-container" style="height:300px;"><canvas id="trafficChart" role="img" aria-label="Weekly sessions and visitors, Oh Polly UK, last 15 weeks"></canvas></div>
+  <div class="section-title">Likely drivers</div>
+  <div style="font-size:12.5px;color:#374151;line-height:1.6;">
+    Hypotheses to validate with marketing — directional (from GA4, which has a UK consent-mode gap), not proven causes:
+    <ul style="margin:8px 0;padding-left:20px;">
+      <li><b>Free-traffic erosion (lead).</b> Organic search and direct/brand demand softening; paid has scaled but isn't fully offsetting it.</li>
+      <li><b>Seasonality.</b> Traffic peaked in early May and has eased into summer — partly the normal spring→summer cycle.</li>
+      <li><b>Weaker top-of-funnel reach.</b> Email and organic social are softer, pulling in fewer new visitors.</li>
+      <li><b>Paid efficiency.</b> Paid up while total is down — worth checking it's incremental, not replacing organic at a cost.</li>
+    </ul>
+  </div>
+  <div class="footer-note">Shopify (Oh Polly UK online store). Visitors = unique online-store visitors. Current part-week excluded so every week is settled. Web only — excludes the Tapcart app.</div>
 </div>
 
 <script>
@@ -380,6 +410,9 @@ function render(){
   document.getElementById("windowLabel").textContent =
     `Covers ${fmtDate(qd(curFrom))} – ${fmtDate(qd(curTo))}${srcLabel}. Changes are shown against the average week over the previous four weeks ("vs recent avg") and against the same week last year ("vs last year"). Shopify data, refreshed every Monday.`;
 
+  const _cv = document.getElementById("srcCaveat");
+  if (activeSource === "social"){ _cv.style.display=""; _cv.innerHTML = "<b>Read social as a trend, not an absolute conversion rate.</b> Social conversions are under-counted here — in-app browsers (Instagram, TikTok) and privacy features push the converting visit into ‘direct’, so social shows lots of sessions but few purchases. Watch the direction over time, and see the GA4 channel section below for social’s true, later-converting value."; }
+  else { _cv.style.display="none"; }
   renderVerdict(cur, baseW, yy, base, cut);
   renderKpis(cur, baseW, yy);
   renderPlatform();
@@ -400,7 +433,6 @@ function render(){
       </td></tr>`;
   }
   renderSplitTable("deviceTable", "Device", cut.devCur, cut.devPrev, ["mobile","desktop","tablet"]);
-  renderSplitTable("countryTable", "Country", cut.ctryCur, cut.ctryPrev, null);
 
   document.getElementById("notes").innerHTML =
     `Weekly snapshot of Shopify data, taken ${fmtDate(SNAPSHOT.bakedAt)}. Funnel: Sessions &rarr; Add to cart &rarr; Checkout &rarr; Purchase. ` +
@@ -655,23 +687,6 @@ function buildTestCands(){
     }
   }
 
-  // 3) Big market with CVR drop
-  const ctryCurM = asMap(A.ctryCur), ctryPrevM = asMap(A.ctryPrev);
-  const totalSess = Object.values(ctryCurM).reduce((a,v)=>a+v.sessions,0);
-  for (const k of Object.keys(ctryCurM)){
-    const c = ctryCurM[k], p = ctryPrevM[k];
-    if (!p || c.sessions/totalSess < 0.05) continue;
-    const d = relDelta(c.sessions? c.purchase/c.sessions:0, p.sessions? p.purchase/p.sessions:0);
-    if (d!==null && d < -0.12){
-      cands.push({
-        title:`${k} market test`,
-        impact: Math.min(Math.abs(d),0.5) * c.purchase * 4 * AOV,
-        why:`${k} conversion is ${fmtSigned(d)} vs the week before, and ${k} is ${pct(c.sessions/totalSess,0)} of all traffic`,
-        where:`where: full-funnel for ${k} — check shipping, duties, payment methods first`,
-        tests: EXAMPLE_TESTS.geo });
-    }
-  }
-
   cands.sort((a,b)=>b.impact-a.impact);
   return cands;
 }
@@ -801,14 +816,72 @@ function renderWeekly(){
   document.getElementById("weeklyTable").innerHTML = html;
 }
 
+function renderCollections(){
+  const C = SNAPSHOT.collections;
+  const el = document.getElementById("collectionsTable");
+  if (!C || !C.rows || !C.rows.length){ el.innerHTML = `<tr><td style="padding:14px;color:#6b7280;">Collection data not available in this bake.</td></tr>`; return; }
+  const name = h => h.replace(/-/g," ").replace(/\b\w/g, c=>c.toUpperCase());
+  let html = `<tr><th>Collection</th><th>Products</th><th>On sale %</th><th>Sessions</th><th>ATC %</th><th>Checkout %</th><th>CVR</th></tr>`;
+  for (const r of C.rows){
+    const handle=r[0], prod=r[1], s=+r[2], atc=+r[3], reached=+r[4], comp=+r[5];
+    const atcR = s? atc/s : 0, cc = reached? comp/reached : 0, cvr = s? comp/s : 0;
+    html += `<tr>
+      <td><a href="https://www.ohpolly.com/collections/${handle}" style="color:#2456a6;">${name(handle)}</a></td>
+      <td>${prod? fmtInt(+prod):"–"}</td>
+      <td>${(C.discount && C.discount[handle]!=null)? C.discount[handle]+"%" : "–"}</td>
+      <td>${fmtInt(s)}</td>
+      <td>${pct(atcR,1)}</td>
+      <td>${pct(cc,1)}</td>
+      <td>${pct(cvr,2)}</td></tr>`;
+  }
+  el.innerHTML = html;
+}
+
+let trafficChart=null;
+function _tCard(lab,val,note,bad){ return `<div class="kpi ${bad?'kpi-down':''}"><div class="kpi-label">${lab}</div><div class="kpi-value">${val}</div><div class="kpi-delta">${note}</div></div>`; }
+function renderTraffic(){
+  const T = SNAPSHOT.trafficWeekly;
+  if (!T || !T.rows || !T.rows.length){ document.getElementById("trafficStats").innerHTML='<div style="color:#6b7280;padding:12px;">Traffic data not available in this bake.</div>'; return; }
+  const rows = T.rows.map(r=>({wk:r[0], s:+r[1], v:+r[2]}));
+  const first=rows[0], last=rows[rows.length-1];
+  const sChg=(last.s-first.s)/first.s, vChg=(last.v-first.v)/first.v;
+  const spvFirst=first.s/first.v, spvLast=last.s/last.v;
+  const freqFlat = Math.abs(spvLast/spvFirst-1) < 0.03;
+  document.getElementById("trafficStats").innerHTML =
+    _tCard("Weekly sessions", fmtInt(last.s), `${fmtSigned(sChg)} over ${rows.length} weeks`, sChg<-0.02)
+    + _tCard("Weekly visitors (users)", fmtInt(last.v), `${fmtSigned(vChg)} over ${rows.length} weeks`, vChg<-0.02)
+    + _tCard("Sessions per visitor", spvLast.toFixed(2), freqFlat? "flat — frequency unchanged" : `was ${spvFirst.toFixed(2)}`, false);
+  const labels=rows.map(r=>fmtDate(r.wk));
+  if (trafficChart) trafficChart.destroy();
+  try {
+    trafficChart=new Chart(document.getElementById("trafficChart"),{type:"line",
+      data:{labels,datasets:[
+        {label:"Sessions",data:rows.map(r=>r.s),borderColor:"#185FA5",backgroundColor:"rgba(24,95,165,0.05)",borderWidth:2,pointRadius:2,tension:0.25,fill:false},
+        {label:"Visitors",data:rows.map(r=>r.v),borderColor:"#0F6E56",borderDash:[5,4],borderWidth:2,pointRadius:2,tension:0.25,fill:false},
+      ]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmtInt(c.parsed.y)}`}}},
+        scales:{y:{ticks:{callback:v=>(v/1000)+"k",font:{size:10}}},x:{ticks:{font:{size:9},maxRotation:45,autoSkip:true,autoSkipPadding:8}}}}});
+  } catch(e){ document.getElementById("trafficChart").parentElement.innerHTML='<div style="padding:20px;color:#6b7280;font-size:12px;">Chart unavailable — the numbers above are unaffected.</div>'; }
+  const dir = sChg<0? "down" : "up";
+  const peopleVsFreq = freqFlat
+    ? `The change is in <b>visitors, not visit frequency</b> — sessions per visitor has held flat at ~${spvLast.toFixed(1)} all period, so it's about how many people arrive, not how often.`
+    : `Sessions per visitor moved from ${spvFirst.toFixed(2)} to ${spvLast.toFixed(2)}, so visit frequency is shifting too.`;
+  document.getElementById("trafficHighlight").innerHTML =
+    `Sessions are ${dir} <b>${fmtSigned(sChg)}</b> and visitors ${fmtSigned(vChg)} over the last ${rows.length} weeks. ${peopleVsFreq}`;
+}
+
 document.getElementById("tabBtns").querySelectorAll("[data-tab]").forEach(p => p.addEventListener("click", ()=>{
   document.getElementById("tabBtns").querySelectorAll("[data-tab]").forEach(x=>x.classList.remove("active"));
   p.classList.add("active");
-  const funnel = p.dataset.tab==="funnel";
-  document.getElementById("app").style.display = funnel? "" : "none";
-  document.getElementById("weeklyTab").style.display = funnel? "none" : "";
-  document.getElementById("funnelControls").style.display = funnel? "" : "none";
-  if (!funnel) renderWeekly();
+  const tab = p.dataset.tab;
+  document.getElementById("app").style.display = tab==="funnel"? "" : "none";
+  document.getElementById("weeklyTab").style.display = tab==="weekly"? "" : "none";
+  document.getElementById("collectionsTab").style.display = tab==="collections"? "" : "none";
+  document.getElementById("trafficTab").style.display = tab==="traffic"? "" : "none";
+  document.getElementById("funnelControls").style.display = tab==="funnel"? "" : "none";
+  if (tab==="weekly") renderWeekly();
+  if (tab==="collections") renderCollections();
+  if (tab==="traffic") renderTraffic();
 }));
 
 function daysSince(iso, now){ return Math.round((now - new Date(iso+"T12:00:00"))/86400000); }
