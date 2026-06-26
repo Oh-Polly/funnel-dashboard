@@ -69,9 +69,19 @@
   .fcol.data{border-top:3px solid #64748b;}
   .eyebrow.collapsible{cursor:pointer;}
   .collchev{font-size:11px; color:var(--rose-deep); font-weight:600; letter-spacing:.3px;}
-  .tsub{font-size:11px; color:var(--ink-2); margin-top:2px; line-height:1.4;}
   .ttool{display:inline-block; font-size:10.5px; font-weight:700; padding:2px 8px; border-radius:5px; color:#fff;}
   .tg-shoplift{background:var(--rose);} .tg-nosto{background:#0e6e48;} .tg-bao{background:#475569;} .tg-other{background:#94a3b8;}
+  .opp{border:1px solid var(--line); border-radius:12px; padding:14px 16px; margin-bottom:14px; background:#fff;}
+  .opp-t{font-size:15px; font-weight:700;}
+  .opp-rate{font-size:12px; font-weight:600; color:var(--ink-2); margin-left:6px;}
+  .opp-prize{font-size:13px; color:var(--rose-deep); background:var(--blush-soft); border-radius:8px; padding:8px 12px; margin:8px 0 6px;}
+  .trow{border-top:1px solid var(--line); padding:10px 0 4px;}
+  .trow-top{display:flex; align-items:center; gap:8px; font-size:13.5px;}
+  .trow-idea{font-weight:600;}
+  .trow-meta{font-size:11.5px; color:var(--ink-2); margin-top:3px; line-height:1.45;}
+  .trow-metric{color:var(--ink); font-weight:600;}
+  .tbadge{font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.4px; background:var(--good); color:#fff; padding:2px 7px; border-radius:5px; margin-left:auto; white-space:nowrap;}
+  .tbadge.done{background:#94a3b8;}
   @media(max-width:780px){ .focus{grid-template-columns:1fr;} }
   .mover{display:flex; gap:11px; align-items:flex-start; border:1px solid var(--line); border-radius:10px; padding:13px 15px;}
   .mover .mk{font-size:15px; font-weight:700; line-height:1.2;}
@@ -520,22 +530,39 @@ window.toggleFocus=function(){ const b=document.getElementById("focusBody"), c=d
   const host=document.getElementById("tests"); if(!host) return;
   const TB=SNAPSHOT.testBacklog;
   if(!TB||!TB.tests||!TB.tests.length){ const s=host.closest("section"); if(s) s.style.display="none"; return; }
+  const c=cur, aov=(revInfo&&revInfo.aov)?revInfo.aov:0;
+  const r1=c.sessions?c.atc/c.sessions:0, r2=c.atc?c.checkout/c.atc:0, r3=c.checkout?c.purchase/c.checkout:0;
+  // incremental WEEKLY orders from a +1 percentage-point lift at each step (web funnel)
+  const inc1=c.sessions*0.01*(c.atc?c.purchase/c.atc:0);
+  const inc2=c.atc*0.01*(c.checkout?c.purchase/c.checkout:0);
+  const inc3=c.checkout*0.01;
+  const money=n=> n>=1000?("£"+(n/1000).toFixed(1)+"k"):("£"+Math.round(n));
+  const ordW=c.purchase||0;
   const toolCls=t=>({Shoplift:"tg-shoplift",Nosto:"tg-nosto",BAO:"tg-bao"})[t]||"tg-other";
   const chip=t=>t?`<span class="ttool ${toolCls(t)}">${t}</span>`:"";
-  const T=TB.tests;
-  const thisWeek=T.filter(t=>t.status==="this-week"||t.status==="running");
-  const ideas=T.filter(t=>t.status==="idea");
-  const done=T.filter(t=>t.status==="done");
-  let lev="";
-  try{ const c=cur, steps=[["Sessions → Add to cart",c.sessions?c.atc/c.sessions:0],["Add to cart → Checkout",c.atc?c.checkout/c.atc:0],["Checkout → Purchase",c.checkout?c.purchase/c.checkout:0]];
-    steps.sort((a,b)=>a[1]-b[1]); lev=`Biggest on-site leverage: <b>${steps[0][0]}</b> (${pct(steps[0][1],1)} pass-through) — the steepest drop, so most tests target it.`; }catch(e){}
-  function row(t,wr){ return `<tr><td><b>${t.idea||""}</b><div class="tsub">${t.hypothesis||""}</div></td><td>${t.area||""}</td><td>${chip(t.tool)}</td><td>${t.metric||""}</td>${wr?`<td>${t.result||"—"}</td>`:""}</tr>`; }
-  function table(rows,wr){ return `<table><tr><th>Test</th><th>Funnel area</th><th>Tool</th><th>Primary metric</th>${wr?"<th>Result</th>":""}</tr>${rows.map(t=>row(t,wr)).join("")}</table>`; }
-  let h=lev?`<div class="verdict" style="margin-bottom:16px;"><p>${lev}</p></div>`:"";
-  if(thisWeek.length){ h+=`<h4>This week (${thisWeek.length})</h4>`+table(thisWeek,false); }
-  if(ideas.length){ h+=`<h4 style="margin-top:18px;">Backlog (${ideas.length})</h4>`+table(ideas,false); }
-  if(done.length){ h+=`<h4 style="margin-top:18px;">Completed (${done.length})</h4>`+table(done,true); }
-  h+=`<div class="cap" style="margin-top:8px;">Backlog is editable in test_backlog.json (status: this-week / running / idea / done) and bakes in each refresh. No connector exists for Shoplift, Nosto or BAO — results are logged manually. Updated ${TB.updated||""}.</div>`;
+  const badge=s=>(s==="this-week")?`<span class="tbadge">This week</span>`:(s==="running"?`<span class="tbadge">Running</span>`:(s==="done"?`<span class="tbadge done">Done</span>`:""));
+  const groups=[
+    {keys:["Sessions → ATC","Collections"], title:"Sessions → Add to cart", rate:r1,
+     prize:`Steepest drop, biggest prize: a <b>+1 point</b> lift (to ${pct(r1+0.01,1)}) ≈ <b>${Math.round(inc1)} more orders/week</b> · ~${money(inc1*aov)}/wk.`},
+    {keys:["AOV"], title:"Basket size (AOV)", rate:null,
+     prize:`Basket is softening (−9% month-on-month). <b>+£5</b> on AOV across ~${fmtInt(ordW)} weekly web orders ≈ <b>${money(ordW*5)}/week</b>.`},
+    {keys:["ATC → Checkout"], title:"Add to cart → Checkout", rate:r2,
+     prize:`A <b>+1 point</b> lift (to ${pct(r2+0.01,1)}) ≈ <b>${Math.round(inc2)} more orders/week</b> · ~${money(inc2*aov)}/wk.`},
+    {keys:["Checkout → Purchase"], title:"Checkout → Purchase", rate:r3,
+     prize:`A <b>+1 point</b> lift (to ${pct(r3+0.01,1)}) ≈ <b>${Math.round(inc3)} more orders/week</b> · ~${money(inc3*aov)}/wk.`}
+  ];
+  let h=`<p class="sub" style="margin-bottom:14px;">Ordered by leverage. Each area shows the rough weekly upside of improving it (web funnel, latest week × AOV), then the tests aimed at it — run one or two a week.</p>`;
+  for(const g of groups){
+    const tests=TB.tests.filter(t=>g.keys.includes(t.area));
+    if(!tests.length) continue;
+    h+=`<div class="opp"><div class="opp-t">${g.title}${g.rate!=null?`<span class="opp-rate">${pct(g.rate,1)} now</span>`:""}</div><div class="opp-prize">${g.prize}</div>`;
+    for(const t of tests){
+      h+=`<div class="trow"><div class="trow-top">${chip(t.tool)}<span class="trow-idea">${t.idea}</span>${badge(t.status)}</div>`
+        +`<div class="trow-meta">${t.hypothesis||""} <span class="trow-metric">· Measure: ${t.metric||"—"}</span>${t.result?` · <b>Result:</b> ${t.result}`:""}</div></div>`;
+    }
+    h+=`</div>`;
+  }
+  h+=`<div class="cap" style="margin-top:6px;">Prizes are rough sizing, not forecasts. Editable in test_backlog.json (add rows; status this-week / running / idea / done). No connector for Shoplift / Nosto / BAO — results logged manually. Updated ${TB.updated||""}.</div>`;
   host.innerHTML=h;
 })();
 
