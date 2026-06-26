@@ -83,6 +83,8 @@
   .fcol.test{border-top:3px solid var(--rose);}
   .fcol.dive{border-top:3px solid var(--good);}
   .fcol.data{border-top:3px solid #64748b;}
+  .eyebrow.collapsible{cursor:pointer;}
+  .collchev{font-size:11px; color:var(--rose-deep); font-weight:600; letter-spacing:.3px;}
   @media(max-width:780px){ .focus{grid-template-columns:1fr;} }
   .mover{display:flex; gap:11px; align-items:flex-start; border:1px solid var(--line); border-radius:10px; padding:13px 15px;}
   .mover .mk{font-size:15px; font-weight:700; line-height:1.2;}
@@ -157,7 +159,7 @@
 
 <section>
   <div class="eyebrow"><span class="num">02</span> The funnel</div>
-  <p class="lead">Web sessions, last 7 days. The funnel is converting steadily — these steps aren't what's behind this week's revenue pressure (that's traffic, see 01). Use them to spot standing merchandising opportunities. Click any step to drill in.</p>
+  <p class="lead" id="funnelLead">Web sessions, last 7 days. The funnel is converting steadily — these steps aren't what's behind this week's revenue pressure (that's traffic, see 01). Use them to spot standing merchandising opportunities. Click any step to drill in.</p>
   <div class="funnel" id="funnel"></div>
   <div id="drill"></div>
 </section>
@@ -174,9 +176,11 @@
 </section>
 
 <section>
-  <div class="eyebrow"><span class="num">04</span> Where to focus</div>
-  <p class="lead">Turning the numbers above into next moves.</p>
-  <div class="focus" id="focus"></div>
+  <div class="eyebrow collapsible" onclick="toggleFocus()"><span class="num">04</span> Where to focus <span class="collchev" id="focusChev">▸ show</span></div>
+  <div id="focusBody" style="display:none;">
+    <p class="lead">Turning the numbers above into next moves.</p>
+    <div class="focus" id="focus"></div>
+  </div>
 </section>
 
 <div class="foot" id="notes"></div>
@@ -311,38 +315,50 @@ function renderStory(mode){
   const sc=document.getElementById("storyScope"); if(sc) sc.textContent = (mode==="mom")?"this month":"this week";
   const cc=document.getElementById("changedScope"); if(cc) cc.textContent = (mode==="mom")?"What changed this month":"What changed this week";
   document.querySelectorAll("#storyToggle .tg-btn").forEach(b=>b.classList.toggle("active", b.dataset.mode===mode));
+  if(typeof renderFunnel==="function") renderFunnel(mode);
 }
 window.setStoryMode = renderStory;
 if(!HAS_MOM){ const t=document.getElementById("storyToggle"); if(t) t.style.display="none"; }
-renderStory("wow");
 
-// ---- 02 funnel ----
-const fdat=[ {lab:"Sessions",val:cur.sessions,k:"sessions"},{lab:"Add to cart",val:cur.atc,k:"atc"},{lab:"Checkout",val:cur.checkout,k:"checkout"},{lab:"Purchase",val:cur.purchase,k:"purchase"} ];
+// ---- 02 funnel (responds to the WoW / MoM toggle in section 01) ----
 const ACTIONS={ sessions:"Acquisition, not the website — see the Traffic deep-dive for the paid-vs-organic read.",
   atc:"PLP / PDP merchandising — imagery order, size guidance, reviews placement, price anchoring.",
   checkout:"Cart UX — shipping-threshold messaging, cross-sell friction, discount-code field placement.",
   purchase:"Checkout — express-pay prominence, payment options, shipping cost/speed clarity." };
-(function buildFunnel(){
-  let h=""; const arrows=[STEP_DEFS[0],STEP_DEFS[1],STEP_DEFS[2]];
-  fdat.forEach((s,i)=>{ const dW=relDelta(s.val,baseW[s.k]||baseW[["sessions","atc","checkout","purchase"][i]]);
+let FMODE="wow", _selStepK="atc";
+function fCur(){ return (FMODE==="mom"&&HAS_MOM)?SNAPSHOT.monthly.funnel.cur:cur; }
+function fBase(){ return (FMODE==="mom"&&HAS_MOM)?SNAPSHOT.monthly.funnel.prev:baseW; }
+function fSuffix(){ return FMODE==="mom"?"vs prev 4 weeks":"vs recent avg"; }
+function buildFunnel(){
+  const c=fCur(), b=fBase(), arrows=[STEP_DEFS[0],STEP_DEFS[1],STEP_DEFS[2]];
+  const fd=[{lab:"Sessions",val:c.sessions,k:"sessions"},{lab:"Add to cart",val:c.atc,k:"atc"},{lab:"Checkout",val:c.checkout,k:"checkout"},{lab:"Purchase",val:c.purchase,k:"purchase"}];
+  let h="";
+  fd.forEach((s,i)=>{ const dW=relDelta(s.val,b[s.k]);
     h+=`<div class="fstep" data-step="${s.k}"><div class="s-lab">${s.lab}</div><div class="s-val">${fmtInt(s.val)}</div><div class="s-d ${deltaCls(dW)}">${fmtSigned(dW)}</div></div>`;
-    if(i<3){ const cr=stepCR(cur,arrows[i]); h+=`<div class="farrow"><div class="gl">→</div><div class="cr">${pct(cr,1)}</div></div>`; } });
+    if(i<3){ const cr=stepCR(c,arrows[i]); h+=`<div class="farrow"><div class="gl">→</div><div class="cr">${pct(cr,1)}</div></div>`; } });
   document.getElementById("funnel").innerHTML=h;
   document.querySelectorAll(".fstep").forEach(el=>el.addEventListener("click",()=>selStep(el.dataset.step)));
-  selStep("atc");
-})();
+  selStep(_selStepK);
+}
+function renderFunnel(mode){ FMODE=(mode==="mom"&&HAS_MOM)?"mom":"wow"; buildFunnel();
+  const fl=document.getElementById("funnelLead"); if(fl) fl.textContent = FMODE==="mom"
+    ? "Web funnel, last 4 weeks vs the previous 4. The steps convert steadily — use them to spot standing merchandising opportunities. Click any step to drill in."
+    : "Web sessions, last 7 days. The funnel converts steadily — these steps aren't what's behind this week's revenue pressure (that's traffic, see 01). Click any step to drill in."; }
 function selStep(k){
+  _selStepK=k;
   document.querySelectorAll(".fstep").forEach(x=>x.classList.toggle("sel",x.dataset.step===k));
+  const c=fCur(), b=fBase(), suf=fSuffix(), seg=(FMODE!=="mom"), per=(FMODE==="mom")?"last 4 weeks":"this week";
   let title,crline,body;
-  if(k==="sessions"){ const d=relDelta(cur.sessions,baseW.sessions); title="Sessions — top of funnel"; crline=`${fmtInt(cur.sessions)} this week · ${fmtSigned(d)} vs recent avg`;
-    const ws=worstSeg(A.srcCur,A.srcPrev,STEP_DEFS[0]); body=`The reach problem. ${ws?`Weakest from <b>${ws.name}</b> traffic. `:""}Visitors are down over the longer trend while frequency holds — fewer people, not less engagement.`; }
-  else { const def=STEP_DEFS.find(x=>x.key===k); const cr=stepCR(cur,def),bcr=stepCR(base,def),d=relDelta(cr,bcr);
-    const wd=worstSeg(A.devCur,A.devPrev,def), wsrc=worstSeg(A.srcCur,A.srcPrev,def);
-    title=def.label+(k==="atc"?" — lowest-converting step":""); crline=`${pct(cr,1)} · ${fmtSigned(d)} vs recent avg`;
+  if(k==="sessions"){ const d=relDelta(c.sessions,b.sessions); title="Sessions — top of funnel"; crline=`${fmtInt(c.sessions)} ${per} · ${fmtSigned(d)} ${suf}`;
+    const ws=seg?worstSeg(A.srcCur,A.srcPrev,STEP_DEFS[0]):null; body=`The reach problem. ${ws?`Weakest from <b>${ws.name}</b> traffic. `:""}Visitors are down over the longer trend while frequency holds — fewer people, not less engagement.`; }
+  else { const def=STEP_DEFS.find(x=>x.key===k); const cr=stepCR(c,def),bcr=stepCR(b,def),d=relDelta(cr,bcr);
+    const wd=seg?worstSeg(A.devCur,A.devPrev,def):null, wsrc=seg?worstSeg(A.srcCur,A.srcPrev,def):null;
+    title=def.label+(k==="atc"?" — lowest-converting step":""); crline=`${pct(cr,1)} · ${fmtSigned(d)} ${suf}`;
     const bits=[]; if(wd&&wd.d<-0.02) bits.push(`worst on <b>${wd.name}</b> (${fmtSigned(wd.d)})`); if(wsrc&&wsrc.d<-0.02) bits.push(`worst from <b>${wsrc.name}</b> traffic (${fmtSigned(wsrc.d)})`);
-    body=`This step converts ${pct(cr,1)} of the previous one${k==="atc"?" — the steepest drop-off in any funnel, so a standing merchandising lever rather than this week's issue":""}.${bits.length?" Currently "+bits.join("; ")+".":""}`; }
+    body=`This step converts ${pct(cr,1)} of the previous one${k==="atc"?" — the steepest drop-off in any funnel, so a standing merchandising lever":""}.${bits.length?" Currently "+bits.join("; ")+".":(FMODE==="mom"?" Segment breakdown is weekly-only.":"")}`; }
   document.getElementById("drill").innerHTML=`<div class="d-h">${title}</div><div class="d-cr">${crline}</div><p>${body}</p><div class="d-act"><b>What to do:</b> ${ACTIONS[k]}</div>`;
 }
+renderStory("wow");  // initial render — draws story + funnel together (defined after renderStory)
 
 // ---- 03 panels ----
 (function revPanel(){
@@ -475,6 +491,8 @@ function drawReviews(){ const R=SNAPSHOT.reviews; if(!R||!R.daily) return;
 
 openDive("channels"); // open the channel detail by default so it's visible
 
+window.toggleFocus=function(){ const b=document.getElementById("focusBody"), c=document.getElementById("focusChev");
+  const open=b.style.display!=="none"; b.style.display=open?"none":"block"; if(c) c.textContent=open?"▸ show":"▾ hide"; };
 (function renderFocus(){
   const el=document.getElementById("focus"); if(!el) return;
   const M=SNAPSHOT.monthly, R=SNAPSHOT.reviews;
