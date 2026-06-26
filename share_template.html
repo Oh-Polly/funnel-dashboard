@@ -27,6 +27,7 @@
   header{display:flex; align-items:center; justify-content:space-between; padding:26px 0 16px; border-bottom:2px solid var(--blush);}
   .logo .oh{font-family:var(--serif); font-style:italic; font-size:26px;}
   .logo .polly{font-size:15px; letter-spacing:6px; font-weight:500;}
+  .logoimg{height:44px; display:block;}
   .hmeta{text-align:right;} .hmeta .t{font-size:14px; color:var(--ink-2);} .hmeta .d{font-size:12px; color:var(--ink-3);}
   #freshness{margin:10px 0 0;}
   .pill{display:inline-flex; align-items:center; gap:5px; border-radius:999px; padding:3px 10px; font-size:11px; font-weight:600; margin:0 6px 4px 0;}
@@ -53,6 +54,20 @@
   .up{color:var(--good);} .down{color:var(--bad);} .flat{color:var(--ink-3);}
 
   .movers{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-top:6px;}
+  .toggle{display:inline-flex; border:1px solid var(--line); border-radius:9px; overflow:hidden; margin:0 0 18px;}
+  .tg-btn{appearance:none; border:none; background:#fff; color:var(--ink-2); font:inherit; font-size:13px; font-weight:600; padding:7px 16px; cursor:pointer;}
+  .tg-btn+.tg-btn{border-left:1px solid var(--line);}
+  .tg-btn.active{background:var(--rose); color:#fff;}
+  .focus{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-top:6px;}
+  .fcol{border:1px solid var(--line); border-radius:12px; padding:16px 18px; background:#fff;}
+  .fcol h4{margin:0 0 3px; font-size:15px;}
+  .fcol .fsub{font-size:11.5px; color:var(--ink-2); margin-bottom:10px;}
+  .fcol ul{margin:0; padding:0; list-style:none;}
+  .fcol li{font-size:12.5px; line-height:1.5; padding:9px 0; border-top:1px solid var(--line);}
+  .fcol.test{border-top:3px solid var(--rose);}
+  .fcol.dive{border-top:3px solid var(--good);}
+  .fcol.data{border-top:3px solid #64748b;}
+  @media(max-width:780px){ .focus{grid-template-columns:1fr;} }
   .mover{display:flex; gap:11px; align-items:flex-start; border:1px solid var(--line); border-radius:10px; padding:13px 15px;}
   .mover .mk{font-size:15px; font-weight:700; line-height:1.2;}
   .mover .mt{font-size:13.5px; color:var(--ink-2);} .mover .mt b{color:var(--ink);}
@@ -106,17 +121,21 @@
 </div></div>
 
 <header>
-  <div class="logo"><span class="oh">oh</span> <span class="polly">POLLY</span></div>
+  <div class="logo"><img class="logoimg" src="data:image/png;base64,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" alt="Oh Polly"></div>
   <div class="hmeta"><div class="t">Weekly Funnel — Oh Polly UK</div><div class="d" id="windowLabel"></div></div>
 </header>
 <div id="freshness"></div>
 
 <section>
-  <div class="eyebrow"><span class="num">01</span> The story this week</div>
+  <div class="eyebrow"><span class="num">01</span> The story <span id="storyScope">this week</span></div>
   <p class="lead">What matters, and what it means.</p>
+  <div class="toggle" id="storyToggle">
+    <button type="button" class="tg-btn active" data-mode="wow" onclick="setStoryMode('wow')">Week on week</button>
+    <button type="button" class="tg-btn" data-mode="mom" onclick="setStoryMode('mom')">Month on month</button>
+  </div>
   <div class="verdict" id="verdict"></div>
   <div class="cards4" id="cards"></div>
-  <div class="eyebrow" style="margin-top:26px;"><span class="num">＋</span> What changed this week</div>
+  <div class="eyebrow" style="margin-top:26px;"><span class="num">＋</span> <span id="changedScope">What changed this week</span></div>
   <div class="movers" id="movers"></div>
 </section>
 
@@ -136,6 +155,12 @@
   </div>
   <div class="dives" id="dives"></div>
   <div id="diveDetail"></div>
+</section>
+
+<section>
+  <div class="eyebrow"><span class="num">04</span> Where to focus</div>
+  <p class="lead">Turning the numbers above into next moves.</p>
+  <div class="focus" id="focus"></div>
 </section>
 
 <div class="foot" id="notes"></div>
@@ -189,41 +214,33 @@ function freshPill(t,stale){ const bg=stale?"#fffbeb":"#f0fdf4",bd=stale?"#fcd34
 
 // ---- 01 story ----
 function platWeek(src,from,to){ return sumPlat(SNAPSHOT.platform?SNAPSHOT.platform[src].daily:[],from,to); }
+
+// Weekly revenue — computed always (the revenue panel in section 03 also uses it).
 let revInfo=null;
-(function renderStory(){
-  // revenue + AOV (web+app)
-  let revHtml="";
-  if(SNAPSHOT.platform){ const w=platWeek("web",curFrom,curTo),a=platWeek("app",curFrom,curTo);
-    const rev=w.revenue+a.revenue, ord=w.orders+a.orders, aov=ord?rev/ord:0;
-    const wp=platWeek("web",baseFrom,baseTo),ap=platWeek("app",baseFrom,baseTo); const revBaseW=(wp.revenue+ap.revenue)/4;
-    revInfo={rev,ord,aov,web:w.revenue,app:a.revenue,appShare:ord?a.orders/(ord):0, dRev:relDelta(rev,revBaseW)}; }
+if(SNAPSHOT.platform){ const w=platWeek("web",curFrom,curTo),a=platWeek("app",curFrom,curTo);
+  const rev=w.revenue+a.revenue, ord=w.orders+a.orders, aov=ord?rev/ord:0;
+  const wp=platWeek("web",baseFrom,baseTo),ap=platWeek("app",baseFrom,baseTo); const revBaseW=(wp.revenue+ap.revenue)/4;
+  revInfo={rev,ord,aov,web:w.revenue,app:a.revenue,appShare:ord?a.orders/(ord):0, dRev:relDelta(rev,revBaseW)}; }
+
+const HAS_MOM = !!(SNAPSHOT.monthly && SNAPSHOT.monthly.funnel && SNAPSHOT.monthly.rev);
+
+// Week-on-week story (last 7 days vs the 4-week average).
+function storyWoW(){
   const cvrNow=cur.sessions?cur.purchase/cur.sessions:0, cvrBase=baseW.sessions?baseW.purchase/baseW.sessions:0;
   const dCvr=relDelta(cvrNow,cvrBase), dPur=relDelta(cur.purchase,baseW.purchase);
-  // verdict
   let tag="Steady",cls="";
   if((dPur??0)<-0.05){tag="Watch";cls="bad";} else if((dPur??0)>0.05){tag="Good week";cls="good";}
   const revLine = revInfo? `Revenue is ${revInfo.dRev>0.02?"up":revInfo.dRev<-0.02?"down":"holding"} at £${(revInfo.rev/1e6).toFixed(2)}m while traffic is under pressure` : "Conversion is holding while traffic is under pressure";
-  document.getElementById("verdict").innerHTML =
-    `<span class="tag ${cls}">${tag}</span><h2>${revLine} — the risk is reach, not the website.</h2>`+
-    `<p>The funnel and basket are healthy; fewer people are arriving. The clearest lever is acquisition (see <b>Traffic</b>), not on-site conversion.</p>`;
-  // cards
   const cards=[];
   if(revInfo){ cards.push({label:"Revenue / week",big:`£${(revInfo.rev/1e6).toFixed(2)}m`,d:revInfo.dRev,so:`Web £${fmtInt(revInfo.web)} · App £${fmtInt(revInfo.app)}. Holding up better than traffic.`});
     cards.push({label:"Avg order value",big:`£${Math.round(revInfo.aov)}`,d:null,so:`Basket size steady — the slide isn't a discounting problem.`}); }
   cards.push({label:"Conversion (sess → purchase)",big:pct(cvrNow),d:dCvr,so:`On-site conversion is holding while traffic falls — the issue is upstream.`});
   if(SNAPSHOT.platform){ const a=platWeek("app",curFrom,curTo),w=platWeek("web",curFrom,curTo); const sh=(a.orders+w.orders)?a.orders/(a.orders+w.orders):0;
     cards.push({label:"App share of orders",big:pct(sh,1),d:null,u:true,so:`~⅓ of orders run through the app — outside the web funnel below.`}); }
-  document.getElementById("cards").innerHTML = cards.slice(0,4).map(c=>{
-    const dh = c.d===null?"":`<div class="delta ${deltaCls(c.d)}">${fmtSigned(c.d)} vs recent avg</div>`;
-    return `<div class="icard"><div class="label">${c.label}</div><div class="big ${c.u?'u':''}">${c.big}</div>${dh||'<div class="delta flat">&nbsp;</div>'}<div class="so">${c.so}</div></div>`;
-  }).join("");
-  // movers
   const sc=asMap(A.srcCur),sp=asMap(A.srcPrev); const mv=[];
   for(const k of ["direct","search","social"]){ if(sc[k]&&sp[k]){ const ds=relDelta(sc[k].sessions,sp[k].sessions); mv.push({k,type:"sessions",d:ds}); } }
   mv.sort((a,b)=>a.d-b.d); const worstSrc=mv[0];
-  // best cvr source
   let bestC=null; for(const k of ["direct","search","social"]){ if(sc[k]&&sp[k]){ const dc=relDelta(sc[k].purchase/sc[k].sessions, sp[k].purchase/sp[k].sessions); if(bestC===null||dc>bestC.d) bestC={k,d:dc}; } }
-  // mobile vs desktop cvr
   const dv=asMap(A.devCur),dvp=asMap(A.devPrev); let mob=null,desk=null;
   if(dv.mobile&&dvp.mobile) mob=relDelta(dv.mobile.purchase/dv.mobile.sessions,dvp.mobile.purchase/dvp.mobile.sessions);
   if(dv.desktop&&dvp.desktop) desk=relDelta(dv.desktop.purchase/dv.desktop.sessions,dvp.desktop.purchase/dvp.desktop.sessions);
@@ -231,8 +248,57 @@ let revInfo=null;
   if(worstSrc) movers.push({cls:"neg",mk:"▼",html:`<b>${worstSrc.k} traffic ${fmtSigned(worstSrc.d)}</b> week-on-week — the biggest source move, ${worstSrc.d<0?"and a drag on the week":"a tailwind"}.`});
   if(bestC) movers.push({cls:bestC.d>=0?"pos":"neg",mk:bestC.d>=0?"▲":"▼",html:`<b>${bestC.k} converting ${fmtSigned(bestC.d)}</b> vs the week before — the strongest conversion shift by source.`});
   if(mob!==null&&desk!==null) movers.push({cls:(mob<desk)?"neg":"pos",mk:(mob<desk)?"📱":"▲",html:`<b>Mobile vs desktop</b> — desktop conversion <span class="${deltaCls(desk)}">${fmtSigned(desk)}</span>, mobile <span class="${deltaCls(mob)}">${fmtSigned(mob)}</span>; mobile carries the volume.`});
-  document.getElementById("movers").innerHTML = movers.map(m=>`<div class="mover ${m.cls}"><span class="mk">${m.mk}</span><div class="mt">${m.html}</div></div>`).join("");
-})();
+  return {tag,cls,suffix:"vs recent avg",
+    h2:`${revLine} — the risk is reach, not the website.`,
+    p:`The funnel and basket are healthy; fewer people are arriving. The clearest lever is acquisition (see <b>Traffic</b>), not on-site conversion.`,
+    cards,movers};
+}
+
+// Month-on-month story (last 4 weeks vs the previous 4 weeks).
+function storyMoM(){
+  const M=SNAPSHOT.monthly, f=M.funnel, r=M.rev;
+  const dSess=relDelta(f.cur.sessions,f.prev.sessions);
+  const cvrNow=f.cur.sessions?f.cur.purchase/f.cur.sessions:0, cvrPrev=f.prev.sessions?f.prev.purchase/f.prev.sessions:0;
+  const dCvr=relDelta(cvrNow,cvrPrev);
+  const dRev=relDelta(r.cur.revenue,r.prev.revenue);
+  const aovNow=r.cur.orders?r.cur.revenue/r.cur.orders:0, aovPrev=r.prev.orders?r.prev.revenue/r.prev.orders:0;
+  const dAov=relDelta(aovNow,aovPrev);
+  let tag="Steady",cls="";
+  if((dRev??0)<-0.05){tag="Watch";cls="bad";} else if((dRev??0)>0.05){tag="Strong month";cls="good";}
+  const h2=`Revenue ${fmtSigned(dRev)} over the last 4 weeks vs the previous 4 — £${(r.cur.revenue/1e6).toFixed(2)}m.`;
+  const p=`The drop is reach plus basket: traffic ${fmtSigned(dSess)} and average order value ${fmtSigned(dAov)}, while on-site conversion held (${fmtSigned(dCvr)}). The monthly view exposes a softer basket the weekly numbers don't.`;
+  const cards=[
+    {label:"Revenue / 4 weeks",big:`£${(r.cur.revenue/1e6).toFixed(2)}m`,d:dRev,so:`Web £${fmtInt(r.cur.web)} · App £${fmtInt(r.cur.app)}. ${fmtInt(r.cur.orders)} orders.`},
+    {label:"Avg order value",big:`£${Math.round(aovNow)}`,d:dAov,so:`Down from £${Math.round(aovPrev)} — baskets softening; worth checking discount mix.`},
+    {label:"Conversion (sess → purchase)",big:pct(cvrNow),d:dCvr,so:`Held steady month-on-month — the website isn't the cause.`},
+    {label:"Sessions / 4 weeks",big:fmtInt(f.cur.sessions),d:dSess,so:`Traffic is the headline drag on the month.`}
+  ];
+  const movers=[
+    {cls:"neg",mk:"▼",html:`<b>Traffic ${fmtSigned(dSess)}</b> vs the previous 4 weeks — the month's biggest drag.`},
+    {cls:dAov<0?"neg":"pos",mk:dAov<0?"▼":"▲",html:`<b>Average order value ${fmtSigned(dAov)}</b> (£${Math.round(aovPrev)} → £${Math.round(aovNow)}) — a basket shift the weekly view misses.`},
+    {cls:dCvr>=0?"pos":"neg",mk:dCvr>=0?"▲":"▼",html:`<b>Conversion ${fmtSigned(dCvr)}</b> — on-site performance is steady; the pressure is traffic and basket, not the funnel.`}
+  ];
+  return {tag,cls,suffix:"vs prev 4 weeks",h2,p,cards,movers};
+}
+
+function renderStory(mode){
+  if(mode==="mom" && !HAS_MOM) mode="wow";
+  const s = (mode==="mom") ? storyMoM() : storyWoW();
+  document.getElementById("verdict").innerHTML =
+    `<span class="tag ${s.cls}">${s.tag}</span><h2>${s.h2}</h2><p>${s.p}</p>`;
+  document.getElementById("cards").innerHTML = s.cards.slice(0,4).map(c=>{
+    const dh = c.d===null ? '<div class="delta flat">&nbsp;</div>'
+      : `<div class="delta ${deltaCls(c.d)}">${fmtSigned(c.d)} ${s.suffix}</div>`;
+    return `<div class="icard"><div class="label">${c.label}</div><div class="big ${c.u?'u':''}">${c.big}</div>${dh}<div class="so">${c.so}</div></div>`;
+  }).join("");
+  document.getElementById("movers").innerHTML = s.movers.map(m=>`<div class="mover ${m.cls}"><span class="mk">${m.mk}</span><div class="mt">${m.html}</div></div>`).join("");
+  const sc=document.getElementById("storyScope"); if(sc) sc.textContent = (mode==="mom")?"this month":"this week";
+  const cc=document.getElementById("changedScope"); if(cc) cc.textContent = (mode==="mom")?"What changed this month":"What changed this week";
+  document.querySelectorAll("#storyToggle .tg-btn").forEach(b=>b.classList.toggle("active", b.dataset.mode===mode));
+}
+window.setStoryMode = renderStory;
+if(!HAS_MOM){ const t=document.getElementById("storyToggle"); if(t) t.style.display="none"; }
+renderStory("wow");
 
 // ---- 02 funnel ----
 const fdat=[ {lab:"Sessions",val:cur.sessions,k:"sessions"},{lab:"Add to cart",val:cur.atc,k:"atc"},{lab:"Checkout",val:cur.checkout,k:"checkout"},{lab:"Purchase",val:cur.purchase,k:"purchase"} ];
@@ -271,24 +337,29 @@ function selStep(k){
 (function reviewPanel(){
   const el=document.getElementById("reviewPanel"); const R=SNAPSHOT.reviews;
   if(!R||!R.daily){ el.innerHTML='<h3>Customer reviews</h3><div class="note">Run fetch_okendo_reviews.py to enable.</div>'; return; }
-  const vals=Object.values(R.daily); const tot=vals.reduce((a,v)=>a+(v.new||0)+(v.existing||0),0); const days=vals.length; const tn=vals.reduce((a,v)=>a+(v.new||0),0);
-  el.innerHTML=`<h3>Customer reviews</h3><div class="bigrow"><div><div class="v">${fmtInt(Math.round(tot/(days||1)))}/day</div><div class="k">reviews captured</div></div><div><div class="v">${tot?(tn/tot*100).toFixed(1):0}%</div><div class="k">on new products</div></div></div><div class="note">${fmtInt(tot)} reviews over ${days} days. New drops build reviews slowly. <a onclick="openDive('reviews')">See trend →</a></div>`;
+  const vals=Object.values(R.daily); const tot=vals.reduce((a,v)=>a+(v.new||0)+(v.existing||0),0); const days=vals.length;
+  const co=R.cohort;
+  const second = co ? `<div><div class="v">${co.coveragePct}%</div><div class="k">new launches with a review</div></div>` : "";
+  const note = co
+    ? `Only ${fmtInt(co.withReviews)} of ${fmtInt(co.size)} products tagged New In This Month have any review — ${Math.round(100-co.coveragePct)}% are live with no social proof. ${fmtInt(tot)} reviews captured over ${days} days. <a onclick="openDive('reviews')">See trend →</a>`
+    : `${fmtInt(tot)} reviews over ${days} days. <a onclick="openDive('reviews')">See trend →</a>`;
+  el.innerHTML=`<h3>Customer reviews</h3><div class="bigrow"><div><div class="v">${fmtInt(Math.round(tot/(days||1)))}/day</div><div class="k">reviews captured</div></div>${second}</div><div class="note">${note}</div>`;
 })();
 
 // ---- deep dives ----
 const dives=[ {k:"traffic",name:"Traffic",stat:"15-wk",teaser:"Sessions vs visitors; the reach trend behind the slide."},
   {k:"channels",name:"Channels",stat:"GA4",teaser:"How each channel converts — first-visit vs in-visit."},
-  {k:"collections",name:"Collections",stat:"25",teaser:"Per-collection sessions, ATC and conversion."},
-  {k:"reviews",name:"Reviews",stat:"daily",teaser:"Reviews captured per day, new vs existing products."} ];
+  {k:"collections",name:"Collections",stat:"25",teaser:"Per-collection performance + 12-week trend for the top 10."},
+  {k:"reviews",name:"Reviews",stat:(SNAPSHOT.reviews&&SNAPSHOT.reviews.cohort?SNAPSHOT.reviews.cohort.coveragePct+"%":"trend"),teaser:"Weekly review trend + how many new launches have any review."} ];
 document.getElementById("dives").innerHTML=dives.map(d=>`<div class="dive" data-dive="${d.k}"><div class="d-top"><span class="d-name">${d.name}</span><span class="d-stat">${d.stat}</span></div><div class="d-teaser">${d.teaser}</div><div class="d-link">Tap to open →</div></div>`).join("");
 document.querySelectorAll(".dive").forEach(c=>c.addEventListener("click",()=>openDive(c.dataset.dive)));
 function openDive(k){
   document.querySelectorAll(".dive").forEach(x=>x.classList.toggle("sel-d",x.dataset.dive===k));
   const host=document.getElementById("diveDetail"); host.innerHTML='<div class="dd" id="ddinner"></div>'; const inner=document.getElementById("ddinner");
   if(k==="channels") inner.innerHTML=channelsHTML();
-  else if(k==="collections") inner.innerHTML=collectionsHTML();
+  else if(k==="collections"){ inner.innerHTML=collectionsHTML()+collPatternsHTML()+collTrendHTML(); drawCollTrend(0); }
   else if(k==="traffic"){ inner.innerHTML=`<h4>Traffic — last weeks</h4><div class="sub">Sessions vs visitors (Shopify, settled weeks)</div><div class="chart-box"><canvas id="ddTraffic"></canvas></div>`; drawTraffic(); }
-  else if(k==="reviews"){ inner.innerHTML=`<h4>Product reviews — Okendo</h4><div class="sub">Reviews captured per day · existing vs new products</div><div class="chart-box"><canvas id="ddReviews"></canvas></div>`; drawReviews(); }
+  else if(k==="reviews"){ const co=SNAPSHOT.reviews&&SNAPSHOT.reviews.cohort; inner.innerHTML=`<h4>Product reviews — Okendo</h4><div class="sub">Reviews captured per week · new-launch vs existing products${co?` · ${fmtInt(co.withReviews)} of ${fmtInt(co.size)} new launches have a review (${co.coveragePct}%)`:""}</div><div class="chart-box"><canvas id="ddReviews"></canvas></div>${co?`<div class="cap" style="margin-top:8px;">"New launch" = products tagged New In This Month (${fmtInt(co.size)} products). ${Math.round(100-co.coveragePct)}% are live with no review — the day-1 social-proof gap. New-launch reviews use the left (pink) axis, existing the right (slate) — different scales so the smaller new-launch trend stays readable.</div>`:""}`; drawReviews(); }
   host.scrollIntoView({behavior:"smooth",block:"nearest"});
 }
 function channelsHTML(){
@@ -319,19 +390,104 @@ function collectionsHTML(){
   h+=`<tr><td colspan="7" class="cap">On sale % = products with a compare-at (markdown) price. Newest = days since the most recent product was added (lower = fresher). Collections refreshed in the last 30 days convert ~0.76% vs ~0.41% when stale — freshness drives conversion. Behaviour window ${C.window?C.window.start+" → "+C.window.end:""}; catalogue as of ${asOf}.</td></tr></table>`;
   return h;
 }
+function collPatternsHTML(){
+  const C=SNAPSHOT.collections; if(!C||!C.rows) return "";
+  const M=(SNAPSHOT.collectionMeta&&SNAPSHOT.collectionMeta.by)||{};
+  const isSale=h=>/sale|outlet|clearance|markdown/i.test(h);
+  function buckets(rows){
+    const B={fresh:{lab:"Fresh (≤30 days)",s:0,a:0,p:0,n:0},recent:{lab:"Recent (31–90 days)",s:0,a:0,p:0,n:0},older:{lab:"Older (90 days+)",s:0,a:0,p:0,n:0}};
+    for(const r of rows){ const h=r[0],s=+r[2],a=+r[3],p=+r[5]; const m=M[h]; const d=(m&&m[2]!=null)?m[2]:null; if(d==null||!s) continue;
+      const b=d<=30?B.fresh:(d<=90?B.recent:B.older); b.s+=s;b.a+=a;b.p+=p;b.n++; }
+    return B;
+  }
+  function tbl(title,sub,B){
+    const order=[B.fresh,B.recent,B.older].filter(b=>b.n>0); if(!order.length) return "";
+    let h=`<div style="margin-top:14px;font-weight:600;font-size:13px;">${title}</div><div class="sub">${sub}</div><table><tr><th>Freshness</th><th>Collections</th><th>Sessions</th><th>Add-to-cart %</th><th>Conversion</th></tr>`;
+    for(const b of order) h+=`<tr><td>${b.lab}</td><td>${b.n}</td><td>${fmtInt(b.s)}</td><td>${pct(b.s?b.a/b.s:0,1)}</td><td>${pct(b.s?b.p/b.s:0,2)}</td></tr>`;
+    const fresh=B.fresh, oldest=order[order.length-1];
+    let ins="";
+    if(fresh.n && oldest!==fresh){ const fc=fresh.s?fresh.p/fresh.s:0, oc=oldest.s?oldest.p/oldest.s:0; const lift=oc?((fc-oc)/oc*100):0;
+      ins=`Fresh converts <b>${pct(fc,2)}</b> vs <b>${pct(oc,2)}</b> for ${oldest.lab.toLowerCase().replace(/\s*\(.*\)/,"")} — ${lift>=0?"+":""}${lift.toFixed(0)}%. ${lift>=10?"freshness lifts conversion.":(lift<=-10?"freshness isn't the driver in this cut.":"broadly flat.")}`; }
+    h+=`<tr><td colspan="5" class="cap">${ins}</td></tr></table>`;
+    return h;
+  }
+  let h=`<h4 style="margin-top:22px;">Pattern — does freshness drive performance?</h4><div class="sub">Top collections grouped by days since the newest product was added (created date). Session-based, latest week.</div>`;
+  h+=tbl("All top collections","Includes Sale &amp; Outlet — discounting inflates their conversion",buckets(C.rows));
+  h+=tbl("Excluding Sale &amp; Outlet","Discount collections removed to isolate freshness",buckets(C.rows.filter(r=>!isSale(r[0]))));
+  h+=`<div class="cap" style="margin-top:6px;">Freshness = days since the newest product (by created date) entered the collection. Seasonality isn't isolated — that needs season tags + multi-week history (see Where to focus → need more data).</div>`;
+  return h;
+}
+function collTrendHTML(){
+  const T=SNAPSHOT.collectionsTrend;
+  if(!T||!T.handles||!T.handles.length) return `<h4 style="margin-top:22px;">Top collections — performance over time</h4><div class="note">Trend builds from your next collection-sheet refresh — it keeps 12 weeks for the top 10 collections.</div>`;
+  const nm=h=>h.replace(/-/g," ").replace(/\b\w/g,c=>c.toUpperCase());
+  const opts=T.handles.map((h,i)=>`<option value="${i}">${nm(h)}</option>`).join("");
+  return `<h4 style="margin-top:22px;">Top collections — performance over time</h4><div class="sub">Weekly sessions &amp; conversion · ${T.weeks.length} weeks · pick a collection</div>`
+    +`<select id="ctSel" onchange="drawCollTrend(+this.value)" style="margin:4px 0 10px; padding:6px 10px; border:1px solid var(--line); border-radius:8px; font:inherit; font-size:13px;">${opts}</select>`
+    +`<div class="chart-box"><canvas id="ddCollTrend"></canvas></div>`
+    +`<div class="cap" style="margin-top:8px;">Sessions (bars, left) and conversion (line, right) by week. Watch for step-ups when products are added or the collection is refreshed — catalogue history isn't logged yet to overlay automatically (see Where to focus → need more data).</div>`;
+}
+let _ct=null;
+function drawCollTrend(i){ const T=SNAPSHOT.collectionsTrend; if(!T||!T.handles||!T.handles.length) return; i=i||0; const h=T.handles[i], s=T.series[h];
+  const labels=T.weeks.map(w=>"W"+w), sess=s.sessions, cvr=s.sessions.map((x,j)=>x?100*s.purchases[j]/x:0);
+  if(_ct)_ct.destroy(); _ct=new Chart(document.getElementById("ddCollTrend"),{data:{labels,datasets:[
+    {type:"bar",label:"Sessions",data:sess,backgroundColor:"#e9b9c6",yAxisID:"yS",order:2},
+    {type:"line",label:"Conversion %",data:cvr,borderColor:"#0e6e48",borderWidth:2,pointRadius:2,tension:.25,yAxisID:"yC",order:1}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{boxWidth:12,font:{size:11}}}},
+      scales:{yS:{position:"left",beginAtZero:true,title:{display:true,text:"Sessions / wk",font:{size:10}},ticks:{callback:v=>v>=1000?(v/1000)+"k":v,font:{size:10}}},
+        yC:{position:"right",beginAtZero:true,title:{display:true,text:"Conversion %",color:"#0e6e48",font:{size:10}},ticks:{color:"#0e6e48",callback:v=>v.toFixed(1)+"%",font:{size:10}},grid:{drawOnChartArea:false}},
+        x:{ticks:{font:{size:9}}}}}}); }
 let _tc=null,_rc=null;
 function drawTraffic(){ const W=SNAPSHOT.trafficWeekly; if(!W||!W.rows) return; const r=W.rows.map(x=>({w:x[0],s:+x[1],v:+x[2]}));
   if(_tc)_tc.destroy(); _tc=new Chart(document.getElementById("ddTraffic"),{type:"line",data:{labels:r.map(x=>fmtDate(x.w)),datasets:[
     {label:"Sessions",data:r.map(x=>x.s),borderColor:"#b14f6b",borderWidth:2,pointRadius:2,tension:.25},
     {label:"Visitors",data:r.map(x=>x.v),borderColor:"#0e6e48",borderDash:[5,4],borderWidth:2,pointRadius:2,tension:.25}]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{boxWidth:12,font:{size:11}}}},scales:{y:{ticks:{callback:v=>(v/1000)+"k",font:{size:10}}},x:{ticks:{font:{size:9},maxRotation:45,autoSkip:true}}}}}); }
-function drawReviews(){ const R=SNAPSHOT.reviews; if(!R||!R.daily) return; const ds=Object.keys(R.daily).sort(); const rows=ds.map(d=>({d,n:R.daily[d].new||0,e:R.daily[d].existing||0}));
-  if(_rc)_rc.destroy(); _rc=new Chart(document.getElementById("ddReviews"),{type:"bar",data:{labels:rows.map(x=>fmtDate(x.d)),datasets:[
-    {label:"Existing",data:rows.map(x=>x.e),backgroundColor:"#b14f6b",stack:"s"},
-    {label:"New",data:rows.map(x=>x.n),backgroundColor:"#e6147a",stack:"s"}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{boxWidth:12,font:{size:11}}}},scales:{x:{stacked:true,ticks:{font:{size:8},maxRotation:90,autoSkip:true}},y:{stacked:true,ticks:{font:{size:10}}}}}}); }
+function drawReviews(){ const R=SNAPSHOT.reviews; if(!R||!R.daily) return;
+  // bucket daily -> weeks (Monday start) for a readable trend line instead of 120 daily bars
+  const wk={}; for(const d of Object.keys(R.daily)){ const dt=new Date(d+"T12:00:00"); const off=(dt.getDay()+6)%7; const mon=new Date(dt); mon.setDate(dt.getDate()-off); const key=qd(mon); (wk[key]=wk[key]||{n:0,e:0}); wk[key].n+=R.daily[d].new||0; wk[key].e+=R.daily[d].existing||0; }
+  let keys=Object.keys(wk).sort(); if(keys.length>3) keys=keys.slice(1,-1); // drop partial first/last weeks
+  const rows=keys.map(k=>({w:k,n:wk[k].n,e:wk[k].e}));
+  if(_rc)_rc.destroy(); _rc=new Chart(document.getElementById("ddReviews"),{type:"line",data:{labels:rows.map(x=>fmtDate(x.w)),datasets:[
+    {label:"New-launch products",data:rows.map(x=>x.n),borderColor:"#e6147a",backgroundColor:"#e6147a",borderWidth:3,pointRadius:2,tension:.25,yAxisID:"yNew"},
+    {label:"Existing products",data:rows.map(x=>x.e),borderColor:"#334155",borderDash:[6,4],borderWidth:2,pointRadius:2,tension:.25,yAxisID:"yExist"}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{boxWidth:12,font:{size:11}}}},
+      scales:{
+        yNew:{position:"left",beginAtZero:true,title:{display:true,text:"New-launch / wk",color:"#e6147a",font:{size:10}},ticks:{color:"#e6147a",font:{size:10}},grid:{drawOnChartArea:false}},
+        yExist:{position:"right",beginAtZero:true,title:{display:true,text:"Existing / wk",color:"#334155",font:{size:10}},ticks:{color:"#334155",font:{size:10}}},
+        x:{ticks:{font:{size:9},maxRotation:45,autoSkip:true}}}}}); }
 
 openDive("channels"); // open the channel detail by default so it's visible
+
+(function renderFocus(){
+  const el=document.getElementById("focus"); if(!el) return;
+  const M=SNAPSHOT.monthly, R=SNAPSHOT.reviews;
+  let dSess=null,dAov=null,cov=null;
+  if(M&&M.funnel&&M.rev){ dSess=relDelta(M.funnel.cur.sessions,M.funnel.prev.sessions);
+    const a1=M.rev.cur.orders?M.rev.cur.revenue/M.rev.cur.orders:0,a0=M.rev.prev.orders?M.rev.prev.revenue/M.rev.prev.orders:0; dAov=relDelta(a1,a0); }
+  if(R&&R.cohort) cov=R.cohort.coveragePct;
+  const test=[
+    `<b>Acquisition / reach.</b> Traffic ${dSess!=null?fmtSigned(dSess)+" month-on-month":"is under pressure"} while the funnel converts steadily — test channel &amp; paid mix to rebuild reach, not on-site tweaks.`,
+    `<b>Basket size.</b> AOV ${dAov!=null?fmtSigned(dAov)+" month-on-month":"is softening"} — test bundling, "complete the look", and spend-threshold incentives (free shipping / gift over £X).`,
+    `<b>Day-1 social proof.</b> ${cov!=null?`Only ${cov}% of new launches carry a review`:"New launches lack reviews"} — test seeding via influencers, community and early-access review requests on each drop.`,
+    `<b>Collection freshness.</b> Fresh collections convert ~0.76% vs ~0.41% when stale — test a refresh cadence on the top collections.`
+  ];
+  const dive=[
+    `<b>What's driving the AOV drop.</b> Discount mix, product mix, or fewer multi-item baskets? Dig into order composition — newly surfaced by the month-on-month view.`,
+    `<b>Which channels lost traffic.</b> Localise the ${dSess!=null?fmtSigned(dSess)+" ":""}month-on-month reach drop by channel (see Channels + GA4).`,
+    `<b>Collection sprawl.</b> 704 live collections with clear duplicates (Destination Wedding ×4, Prom Dresses ×3) — audit for cannibalisation and merchandising hygiene.`
+  ];
+  const data=[
+    `<b>App (Tapcart) funnel.</b> We see app orders (~⅓ of all) but no app session funnel — need the app's GA4/Firebase to see where app shoppers drop off.`,
+    `<b>Collection performance over time.</b> We keep only the latest week + current catalogue — to prove "adding products/freshness lifts performance" we must log weekly per-collection behaviour and catalogue history.`,
+    `<b>Time-to-first-review.</b> We have coverage (% of launches with a review) but not days-from-launch-to-first-review — need per-product launch dates for true day-1 speed.`,
+    `<b>Direct channel attribution.</b> Direct is GA4's catch-all (returning, app, untracked) — better consent/attribution needed to trust channel reads.`
+  ];
+  const col=(cls,title,sub,items)=>`<div class="fcol ${cls}"><h4>${title}</h4><div class="fsub">${sub}</div><ul>${items.map(i=>`<li>${i}</li>`).join("")}</ul></div>`;
+  el.innerHTML = col("test","1 · Where to test","Quick experiments to run",test)
+    + col("dive","2 · Deep dive now","Dig in this week",dive)
+    + col("data","3 · Need more data","Blind spots to close",data);
+})();
 
 document.getElementById("notes").innerHTML="Oh Polly UK — Shopify (funnel, revenue, collections), GA4 (channels), Okendo (reviews). Web funnel excludes the Tapcart app. Conversion is session-based; GA4 consent mode hides 20–40% of UK traffic, so use trends over absolutes.";
 </script>
