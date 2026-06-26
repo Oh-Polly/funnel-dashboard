@@ -69,6 +69,9 @@
   .fcol.data{border-top:3px solid #64748b;}
   .eyebrow.collapsible{cursor:pointer;}
   .collchev{font-size:11px; color:var(--rose-deep); font-weight:600; letter-spacing:.3px;}
+  .tsub{font-size:11px; color:var(--ink-2); margin-top:2px; line-height:1.4;}
+  .ttool{display:inline-block; font-size:10.5px; font-weight:700; padding:2px 8px; border-radius:5px; color:#fff;}
+  .tg-shoplift{background:var(--rose);} .tg-nosto{background:#0e6e48;} .tg-bao{background:#475569;} .tg-other{background:#94a3b8;}
   @media(max-width:780px){ .focus{grid-template-columns:1fr;} }
   .mover{display:flex; gap:11px; align-items:flex-start; border:1px solid var(--line); border-radius:10px; padding:13px 15px;}
   .mover .mk{font-size:15px; font-weight:700; line-height:1.2;}
@@ -165,6 +168,12 @@
     <p class="lead">Turning the numbers above into next moves.</p>
     <div class="focus" id="focus"></div>
   </div>
+</section>
+
+<section>
+  <div class="eyebrow"><span class="num">05</span> Test roadmap</div>
+  <p class="lead">Funnel-driven A/B test backlog for on-site conversion — pick one or two a week, mapped to the right tool.</p>
+  <div id="tests"></div>
 </section>
 
 <div class="foot" id="notes"></div>
@@ -505,6 +514,29 @@ window.toggleFocus=function(){ const b=document.getElementById("focusBody"), c=d
   el.innerHTML = col("test","1 · Where to test","Quick experiments to run",test)
     + col("dive","2 · Deep dive now","Dig in this week",dive)
     + col("data","3 · Need more data","Blind spots to close",data);
+})();
+
+(function renderTests(){
+  const host=document.getElementById("tests"); if(!host) return;
+  const TB=SNAPSHOT.testBacklog;
+  if(!TB||!TB.tests||!TB.tests.length){ const s=host.closest("section"); if(s) s.style.display="none"; return; }
+  const toolCls=t=>({Shoplift:"tg-shoplift",Nosto:"tg-nosto",BAO:"tg-bao"})[t]||"tg-other";
+  const chip=t=>t?`<span class="ttool ${toolCls(t)}">${t}</span>`:"";
+  const T=TB.tests;
+  const thisWeek=T.filter(t=>t.status==="this-week"||t.status==="running");
+  const ideas=T.filter(t=>t.status==="idea");
+  const done=T.filter(t=>t.status==="done");
+  let lev="";
+  try{ const c=cur, steps=[["Sessions → Add to cart",c.sessions?c.atc/c.sessions:0],["Add to cart → Checkout",c.atc?c.checkout/c.atc:0],["Checkout → Purchase",c.checkout?c.purchase/c.checkout:0]];
+    steps.sort((a,b)=>a[1]-b[1]); lev=`Biggest on-site leverage: <b>${steps[0][0]}</b> (${pct(steps[0][1],1)} pass-through) — the steepest drop, so most tests target it.`; }catch(e){}
+  function row(t,wr){ return `<tr><td><b>${t.idea||""}</b><div class="tsub">${t.hypothesis||""}</div></td><td>${t.area||""}</td><td>${chip(t.tool)}</td><td>${t.metric||""}</td>${wr?`<td>${t.result||"—"}</td>`:""}</tr>`; }
+  function table(rows,wr){ return `<table><tr><th>Test</th><th>Funnel area</th><th>Tool</th><th>Primary metric</th>${wr?"<th>Result</th>":""}</tr>${rows.map(t=>row(t,wr)).join("")}</table>`; }
+  let h=lev?`<div class="verdict" style="margin-bottom:16px;"><p>${lev}</p></div>`:"";
+  if(thisWeek.length){ h+=`<h4>This week (${thisWeek.length})</h4>`+table(thisWeek,false); }
+  if(ideas.length){ h+=`<h4 style="margin-top:18px;">Backlog (${ideas.length})</h4>`+table(ideas,false); }
+  if(done.length){ h+=`<h4 style="margin-top:18px;">Completed (${done.length})</h4>`+table(done,true); }
+  h+=`<div class="cap" style="margin-top:8px;">Backlog is editable in test_backlog.json (status: this-week / running / idea / done) and bakes in each refresh. No connector exists for Shoplift, Nosto or BAO — results are logged manually. Updated ${TB.updated||""}.</div>`;
+  host.innerHTML=h;
 })();
 
 document.getElementById("notes").innerHTML="Oh Polly UK — Shopify (funnel, revenue, collections), GA4 (channels), Okendo (reviews). Web funnel excludes the Tapcart app. Conversion is session-based; GA4 consent mode hides 20–40% of UK traffic, so use trends over absolutes.";

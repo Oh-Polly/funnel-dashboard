@@ -76,6 +76,15 @@ if os.path.exists(rev_path):
 else:
     print("No okendo_reviews.json — Reviews tab will be hidden. Run fetch_okendo_reviews.py to enable it.")
 
+# ---------- 1d. Merge A/B test backlog if available ----------
+tb_path = os.path.join(HERE, "test_backlog.json")
+if os.path.exists(tb_path):
+    with open(tb_path) as f:
+        data["testBacklog"] = json.load(f)
+    print(f"Merged test_backlog.json ({len(data['testBacklog'].get('tests', []))} tests)")
+else:
+    print("No test_backlog.json — Test roadmap section will be hidden.")
+
 # ---------- 2. Inject into template ----------
 with open(TEMPLATE) as f:
     html = f.read()
