@@ -173,7 +173,7 @@
 </section>
 
 <section>
-  <div class="eyebrow collapsible" onclick="toggleFocus()"><span class="num">04</span> Where to focus <span class="collchev" id="focusChev">▸ show</span></div>
+  <div class="eyebrow collapsible" onclick="toggleSection('focus')"><span class="num">04</span> Where to focus <span class="collchev" id="focusChev">▸ show</span></div>
   <div id="focusBody" style="display:none;">
     <p class="lead">Turning the numbers above into next moves.</p>
     <div class="focus" id="focus"></div>
@@ -181,9 +181,11 @@
 </section>
 
 <section>
-  <div class="eyebrow"><span class="num">05</span> Test roadmap</div>
-  <p class="lead">Funnel-driven A/B test backlog for on-site conversion — pick one or two a week, mapped to the right tool.</p>
-  <div id="tests"></div>
+  <div class="eyebrow collapsible" onclick="toggleSection('tests')"><span class="num">05</span> Test roadmap <span class="collchev" id="testsChev">▸ show</span></div>
+  <div id="testsBody" style="display:none;">
+    <p class="lead">Funnel-driven A/B test backlog for on-site conversion — pick one or two a week, mapped to the right tool.</p>
+    <div id="tests"></div>
+  </div>
 </section>
 
 <div class="foot" id="notes"></div>
@@ -494,7 +496,7 @@ function drawReviews(){ const R=SNAPSHOT.reviews; if(!R||!R.daily) return;
 
 openDive("channels"); // open the channel detail by default so it's visible
 
-window.toggleFocus=function(){ const b=document.getElementById("focusBody"), c=document.getElementById("focusChev");
+window.toggleSection=function(key){ const b=document.getElementById(key+"Body"), c=document.getElementById(key+"Chev"); if(!b) return;
   const open=b.style.display!=="none"; b.style.display=open?"none":"block"; if(c) c.textContent=open?"▸ show":"▾ hide"; };
 (function renderFocus(){
   const el=document.getElementById("focus"); if(!el) return;
