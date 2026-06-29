@@ -98,6 +98,14 @@
   .trow-metric{color:var(--ink); font-weight:600;}
   .tbadge{font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.4px; background:var(--good); color:#fff; padding:2px 7px; border-radius:5px; margin-left:auto; white-space:nowrap;}
   .tbadge.done{background:#94a3b8;}
+  .execstrip{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin:14px 0 18px;}
+  .etile{border:1px solid var(--line); border-radius:12px; padding:12px 14px; background:#fff;}
+  .etile-top{display:flex; justify-content:space-between; align-items:center; gap:8px;}
+  .etile-lab{font-size:11px; font-weight:700; color:var(--ink-2); text-transform:uppercase; letter-spacing:.5px;}
+  .etile-big{font-size:25px; font-weight:700; line-height:1.1; margin-top:3px;}
+  .etile-cap{font-size:11px; color:var(--ink-2); margin-bottom:6px;}
+  .etile canvas{width:100%!important; height:42px!important;}
+  @media(max-width:780px){ .execstrip{grid-template-columns:1fr;} }
   @media(max-width:780px){ .focus{grid-template-columns:1fr;} }
   .mover{display:flex; gap:11px; align-items:flex-start; border:1px solid var(--line); border-radius:10px; padding:13px 15px;}
   .mover .mk{font-size:15px; font-weight:700; line-height:1.2;}
@@ -165,6 +173,7 @@
     <button type="button" class="tg-btn" data-mode="mom" onclick="setStoryMode('mom')">Month on month</button>
   </div>
   <div class="verdict" id="verdict"></div>
+  <div class="execstrip" id="execstrip"></div>
   <div class="cards4" id="cards"></div>
   <div class="eyebrow" style="margin-top:26px;"><span class="num">＋</span> <span id="changedScope">What changed this week</span></div>
   <div class="movers" id="movers"></div>
@@ -511,6 +520,28 @@ function drawReviews(){ const R=SNAPSHOT.reviews; if(!R||!R.daily) return;
         x:{ticks:{font:{size:9},maxRotation:45,autoSkip:true}}}}}); }
 
 openDive("channels"); // open the channel detail by default so it's visible
+
+(function renderExecStrip(){
+  const el=document.getElementById("execstrip"); if(!el) return;
+  function weekAgg(daily){ const w={}; (daily||[]).forEach(r=>{ const dt=new Date(r[0].slice(0,10)+"T12:00:00"); const off=(dt.getDay()+6)%7; const m=new Date(dt); m.setDate(dt.getDate()-off); const k=qd(m); w[k]=(w[k]||0)+(+r[2]||0); }); return w; }
+  let revSeries=[];
+  if(SNAPSHOT.platform){ const wv=weekAgg(SNAPSHOT.platform.web&&SNAPSHOT.platform.web.daily), av=weekAgg(SNAPSHOT.platform.app&&SNAPSHOT.platform.app.daily);
+    const keys=[...new Set([...Object.keys(wv),...Object.keys(av)])].sort(); revSeries=keys.map(k=>(wv[k]||0)+(av[k]||0)); if(revSeries.length>2) revSeries=revSeries.slice(1,-1); }
+  const TW=SNAPSHOT.trafficWeekly, WK=SNAPSHOT.weekly, M=SNAPSHOT.monthly;
+  const sessSeries=(TW&&TW.rows)?TW.rows.map(x=>+x[1]):[];
+  const convSeries=(WK&&WK.rows)?WK.rows.map(x=>(+x[1])?100*(+x[4])/(+x[1]):0).slice(-12):[];
+  let dRev=null,dSess=null,cvrNow=null,dCvr=null;
+  if(M&&M.rev&&M.funnel){ dRev=relDelta(M.rev.cur.revenue,M.rev.prev.revenue); dSess=relDelta(M.funnel.cur.sessions,M.funnel.prev.sessions);
+    cvrNow=M.funnel.cur.sessions?M.funnel.cur.purchase/M.funnel.cur.sessions:0; const cp=M.funnel.prev.sessions?M.funnel.prev.purchase/M.funnel.prev.sessions:0; dCvr=relDelta(cvrNow,cp); }
+  const tiles=[
+    {lab:"Revenue", big:M?("£"+(M.rev.cur.revenue/1e6).toFixed(2)+"m"):"—", d:dRev, series:revSeries, color:"#b14f6b", cap:"last 4 weeks"},
+    {lab:"Traffic", big:M?fmtInt(M.funnel.cur.sessions):"—", d:dSess, series:sessSeries, color:"#b14f6b", cap:"weekly sessions"},
+    {lab:"Conversion", big:cvrNow!=null?pct(cvrNow,2):"—", d:dCvr, series:convSeries, color:"#0e6e48", cap:"sessions → purchase"}
+  ];
+  el.innerHTML=tiles.map((t,i)=>`<div class="etile"><div class="etile-top"><span class="etile-lab">${t.lab}</span>${t.d!=null?`<span class="delta ${deltaCls(t.d)}">${fmtSigned(t.d)}</span>`:""}</div><div class="etile-big">${t.big}</div><div class="etile-cap">${t.cap}</div><canvas id="espark${i}"></canvas></div>`).join("");
+  if(window.Chart) tiles.forEach((t,i)=>{ const c=document.getElementById("espark"+i); if(!c||!t.series.length) return;
+    new Chart(c,{type:"line",data:{labels:t.series.map((_,j)=>j),datasets:[{data:t.series,borderColor:t.color,borderWidth:2,pointRadius:0,tension:.35,fill:true,backgroundColor:t.color+"22"}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{enabled:false}},scales:{x:{display:false},y:{display:false}}}}); });
+})();
 
 window.toggleSection=function(key){ const b=document.getElementById(key+"Body"), c=document.getElementById(key+"Chev"); if(!b) return;
   const open=b.style.display!=="none"; b.style.display=open?"none":"block"; if(c) c.textContent=open?"▸ show":"▾ hide"; };
