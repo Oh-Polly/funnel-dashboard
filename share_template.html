@@ -404,7 +404,7 @@ function openDive(k){
   const host=document.getElementById("diveDetail"); host.innerHTML='<div class="dd" id="ddinner"></div>'; const inner=document.getElementById("ddinner");
   if(k==="channels") inner.innerHTML=channelsHTML();
   else if(k==="collections"){ inner.innerHTML=collectionsHTML()+collPatternsHTML()+collTrendHTML(); drawCollTrend(0); }
-  else if(k==="traffic"){ inner.innerHTML=`<h4>Traffic — last weeks</h4><div class="sub">Sessions vs visitors (Shopify, settled weeks)</div><div class="chart-box"><canvas id="ddTraffic"></canvas></div>`; drawTraffic(); }
+  else if(k==="traffic"){ inner.innerHTML=`<h4>Traffic — last weeks</h4><div class="sub">Sessions vs visitors (Shopify, settled weeks)</div><div class="chart-box"><canvas id="ddTraffic"></canvas></div>`+(SNAPSHOT.trafficBySource?`<h4 style="margin-top:18px;">Sessions by source</h4><div class="sub">Where the change is coming from — weekly sessions per referrer source</div><div class="chart-box"><canvas id="ddTrafficSrc"></canvas></div>`:""); drawTraffic(); drawTrafficSrc(); }
   else if(k==="reviews"){ const co=SNAPSHOT.reviews&&SNAPSHOT.reviews.cohort; inner.innerHTML=`<h4>Product reviews — Okendo</h4><div class="sub">Reviews captured per week · new-launch vs existing products${co?` · ${fmtInt(co.withReviews)} of ${fmtInt(co.size)} new launches have a review (${co.coveragePct}%)`:""}</div><div class="chart-box"><canvas id="ddReviews"></canvas></div>${co?`<div class="cap" style="margin-top:8px;">"New launch" = products tagged New In This Month (${fmtInt(co.size)} products). ${Math.round(100-co.coveragePct)}% are live with no review — the day-1 social-proof gap. New-launch reviews use the left (pink) axis, existing the right (slate) — different scales so the smaller new-launch trend stays readable.</div>`:""}`; drawReviews(); }
   host.scrollIntoView({behavior:"smooth",block:"nearest"});
 }
@@ -489,6 +489,11 @@ function drawTraffic(){ const W=SNAPSHOT.trafficWeekly; if(!W||!W.rows) return; 
     {label:"Sessions",data:r.map(x=>x.s),borderColor:"#b14f6b",borderWidth:2,pointRadius:2,tension:.25},
     {label:"Visitors",data:r.map(x=>x.v),borderColor:"#0e6e48",borderDash:[5,4],borderWidth:2,pointRadius:2,tension:.25}]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{boxWidth:12,font:{size:11}}}},scales:{y:{ticks:{callback:v=>(v/1000)+"k",font:{size:10}}},x:{ticks:{font:{size:9},maxRotation:45,autoSkip:true}}}}}); }
+let _tsc=null;
+function drawTrafficSrc(){ const S=SNAPSHOT.trafficBySource; if(!S||!S.series||!window.Chart) return;
+  const colors={direct:"#b14f6b",search:"#0e6e48",social:"#d98a3d",email:"#6b5bd1"};
+  const ds=S.sources.map(s=>({label:s.charAt(0).toUpperCase()+s.slice(1),data:S.series[s],borderColor:colors[s]||"#94a3b8",backgroundColor:colors[s]||"#94a3b8",borderWidth:2,pointRadius:0,tension:.25}));
+  if(_tsc)_tsc.destroy(); _tsc=new Chart(document.getElementById("ddTrafficSrc"),{type:"line",data:{labels:S.weeks.map(w=>fmtDate(w)),datasets:ds},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{boxWidth:12,font:{size:11}}}},scales:{y:{ticks:{callback:v=>(v/1000)+"k",font:{size:10}}},x:{ticks:{font:{size:9},maxRotation:45,autoSkip:true}}}}); }
 function drawReviews(){ const R=SNAPSHOT.reviews; if(!R||!R.daily) return;
   // bucket daily -> weeks (Monday start) for a readable trend line instead of 120 daily bars
   const wk={}; for(const d of Object.keys(R.daily)){ const dt=new Date(d+"T12:00:00"); const off=(dt.getDay()+6)%7; const mon=new Date(dt); mon.setDate(dt.getDate()-off); const key=qd(mon); (wk[key]=wk[key]||{n:0,e:0}); wk[key].n+=R.daily[d].new||0; wk[key].e+=R.daily[d].existing||0; }
