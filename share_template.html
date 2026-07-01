@@ -177,6 +177,7 @@
     <div class="panel" id="revPanel"></div>
     <div class="panel" id="reviewPanel"></div>
   </div>
+  <div class="panel" id="returnsPanel" style="margin:14px 0;"></div>
   <div class="dives" id="dives"></div>
   <div id="diveDetail"></div>
 </section>
@@ -386,6 +387,15 @@ renderStory("wow");  // initial render — draws story + funnel together (define
     : `<div><div class="v">£${Math.round(netAov)}</div><div class="k">avg order value</div></div>`;
   el.innerHTML=`<h3>Revenue &amp; AOV</h3><div class="bigrow"><div><div class="v">£${(revInfo.rev/1e6).toFixed(2)}m</div><div class="k">this week (web + app)</div></div>${aovCell}</div><div class="note">Net AOV is after discounts &amp; returns; gross${grossAov!=null?" (£"+Math.round(grossAov)+")":""} matches the Shopify portal. Web £${fmtInt(revInfo.web)} · App £${fmtInt(revInfo.app)}. <a onclick="openDive('revenue')">See revenue &amp; AOV over time →</a></div>`;
 })();
+(function renderReturns(){
+  const el=document.getElementById("returnsPanel"); if(!el) return; const R=SNAPSHOT.returns;
+  if(!R){ el.style.display="none"; return; }
+  const rate30=R.gross30?100*Math.abs(R.sum30)/R.gross30:0, rate7=R.gross7?100*Math.abs(R.sum7)/R.gross7:0;
+  const rows=(R.topItems7||[]).map(x=>`<tr><td>${x.t}</td><td>£${fmtInt(Math.abs(x.v))}</td></tr>`).join("");
+  el.innerHTML=`<h3>Returns</h3><div class="bigrow"><div><div class="v">£${(Math.abs(R.sum30)/1e6).toFixed(2)}m</div><div class="k">returned · last 30 days</div></div><div><div class="v">${rate30.toFixed(0)}%</div><div class="k">return rate (value)</div></div></div>`
+    +`<div class="note">Last 7 days: <b>£${fmtInt(Math.abs(R.sum7))}</b> returned — ${rate7.toFixed(0)}% of gross sales. Rate is value-based (returns £ ÷ gross £); Shopify's sales data doesn't expose item counts.</div>`
+    +`<h4 style="margin-top:14px;">Most-returned products · last 7 days</h4><table><tr><th>Product</th><th>Returns £</th></tr>${rows}<tr><td colspan="2" class="cap">Embellished / structured gowns dominate returns — a fit or expectation-vs-reality signal worth a closer look on those PDPs.</td></tr></table>`;
+})();
 (function reviewPanel(){
   const el=document.getElementById("reviewPanel"); const R=SNAPSHOT.reviews;
   if(!R||!R.daily){ el.innerHTML='<h3>Customer reviews</h3><div class="note">Run fetch_okendo_reviews.py to enable.</div>'; return; }
@@ -534,8 +544,10 @@ function drawRevenueTrend(seg,btn){ const R=SNAPSHOT.revenueTrend; if(!R||!R.seg
         x:{ticks:{font:{size:9},maxRotation:45,autoSkip:true}}}}}); }
 function drawReviews(){ const R=SNAPSHOT.reviews; if(!R||!R.daily) return;
   // bucket daily -> weeks (Monday start) for a readable trend line instead of 120 daily bars
-  const wk={}; for(const d of Object.keys(R.daily)){ const dt=new Date(d+"T12:00:00"); const off=(dt.getDay()+6)%7; const mon=new Date(dt); mon.setDate(dt.getDate()-off); const key=qd(mon); (wk[key]=wk[key]||{n:0,e:0}); wk[key].n+=R.daily[d].new||0; wk[key].e+=R.daily[d].existing||0; }
-  let keys=Object.keys(wk).sort(); if(keys.length>3) keys=keys.slice(1,-1); // drop partial first/last weeks
+  const wk={}; for(const d of Object.keys(R.daily)){ const dt=new Date(d+"T12:00:00"); const off=(dt.getDay()+6)%7; const mon=new Date(dt); mon.setDate(dt.getDate()-off); const key=qd(mon); (wk[key]=wk[key]||{n:0,e:0,days:0}); wk[key].n+=R.daily[d].new||0; wk[key].e+=R.daily[d].existing||0; wk[key].days++; }
+  let keys=Object.keys(wk).sort();
+  if(keys.length>2) keys=keys.slice(1);                                  // drop first (partial window edge)
+  if(keys.length && wk[keys[keys.length-1]].days < 7) keys=keys.slice(0,-1); // drop last only if it's a partial week
   const rows=keys.map(k=>({w:k,n:wk[k].n,e:wk[k].e}));
   if(_rc)_rc.destroy(); _rc=new Chart(document.getElementById("ddReviews"),{type:"line",data:{labels:rows.map(x=>fmtDate(x.w)),datasets:[
     {label:"New-launch products",data:rows.map(x=>x.n),borderColor:"#e6147a",backgroundColor:"#e6147a",borderWidth:3,pointRadius:2,tension:.25,yAxisID:"yNew"},
