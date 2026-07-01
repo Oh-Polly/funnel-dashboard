@@ -129,7 +129,7 @@
   .panel{border:1px solid var(--line); border-radius:12px; padding:16px 18px;}
   .panel.clickable{cursor:pointer; transition:all .12s;}
   .panel.clickable:hover{border-color:var(--rose); background:var(--blush-soft);}
-  .brief{border:1px solid var(--line); border-left:4px solid var(--rose-deep); background:#fff; border-radius:12px; padding:18px 22px; margin:4px 0 24px; box-shadow:0 6px 22px rgba(0,0,0,.05);}
+  .brief{border:1px solid var(--line); border-left:4px solid var(--rose-deep); background:var(--blush-soft); border-radius:12px; padding:18px 22px; margin:4px 0 24px; box-shadow:0 6px 22px rgba(0,0,0,.05);}
   .brief-h{font-size:13px; font-weight:800; letter-spacing:.5px; text-transform:uppercase; color:var(--rose-deep); margin-bottom:8px;}
   .brief p{margin:0 0 6px; font-size:15.5px; line-height:1.55;}
   .brief-sub{font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.4px; color:var(--ink-2); margin:12px 0 2px;}
@@ -178,12 +178,10 @@
 
 <section>
   <div class="eyebrow"><span class="num">01</span> The story <span id="storyScope">this week</span></div>
-  <p class="lead">What matters, and what it means.</p>
   <div class="toggle" id="storyToggle">
     <button type="button" class="tg-btn active" data-mode="wow" onclick="setStoryMode('wow')">Week on week</button>
     <button type="button" class="tg-btn" data-mode="mom" onclick="setStoryMode('mom')">Month on month</button>
   </div>
-  <div class="verdict" id="verdict"></div>
   <div class="execstrip" id="execstrip"></div>
   <div class="cards4" id="cards"></div>
   <div class="eyebrow" style="margin-top:26px;"><span class="num">＋</span> <span id="changedScope">What changed this week</span></div>
@@ -192,14 +190,13 @@
 
 <section>
   <div class="eyebrow"><span class="num">02</span> The funnel</div>
-  <p class="lead" id="funnelLead">Web sessions, last 7 days. The funnel is converting steadily — these steps aren't what's behind this week's revenue pressure (that's traffic, see 01). Use them to spot standing merchandising opportunities. Click any step to drill in.</p>
+  <p class="lead" id="funnelLead">Web funnel, last 7 days — click any step to drill in.</p>
   <div class="funnel" id="funnel"></div>
   <div id="drill"></div>
 </section>
 
 <section>
   <div class="eyebrow"><span class="num">03</span> Details &amp; deep dives</div>
-  <p class="lead">Money, customers, and a click into each area.</p>
   <div class="split2">
     <div class="panel clickable" id="revPanel" onclick="openDive('revenue')"></div>
     <div class="panel clickable" id="reviewPanel" onclick="openDive('reviews')"></div>
@@ -219,7 +216,7 @@
 <section>
   <div class="eyebrow collapsible" onclick="toggleSection('tests')"><span class="num">05</span> Test roadmap <span class="collchev" id="testsChev">▸ show</span></div>
   <div id="testsBody" style="display:none;">
-    <p class="lead">Funnel-driven A/B test backlog for on-site conversion — pick one or two a week, mapped to the right tool.</p>
+    <p class="lead">Pick one or two tests a week.</p>
     <div id="tests"></div>
   </div>
 </section>
@@ -346,8 +343,6 @@ function storyMoM(){
 function renderStory(mode){
   if(mode==="mom" && !HAS_MOM) mode="wow";
   const s = (mode==="mom") ? storyMoM() : storyWoW();
-  document.getElementById("verdict").innerHTML =
-    `<span class="tag ${s.cls}">${s.tag}</span><h2>${s.h2}</h2><p>${s.p}</p>`;
   document.getElementById("cards").innerHTML = s.cards.slice(0,4).map(c=>{
     const dh = c.d===null ? '<div class="delta flat">&nbsp;</div>'
       : `<div class="delta ${deltaCls(c.d)}">${fmtSigned(c.d)} ${s.suffix}</div>`;
@@ -385,8 +380,8 @@ function buildFunnel(){
 }
 function renderFunnel(mode){ FMODE=(mode==="mom"&&HAS_MOM)?"mom":"wow"; buildFunnel();
   const fl=document.getElementById("funnelLead"); if(fl) fl.textContent = FMODE==="mom"
-    ? "Web funnel, last 4 weeks vs the previous 4. The steps convert steadily — use them to spot standing merchandising opportunities. Click any step to drill in."
-    : "Web sessions, last 7 days. The funnel converts steadily — these steps aren't what's behind this week's revenue pressure (that's traffic, see 01). Click any step to drill in."; }
+    ? "Web funnel, last 4 weeks — click any step to drill in."
+    : "Web funnel, last 7 days — click any step to drill in."; }
 function selStep(k){
   _selStepK=k;
   document.querySelectorAll(".fstep").forEach(x=>x.classList.toggle("sel",x.dataset.step===k));
@@ -414,11 +409,22 @@ renderStory("wow");  // initial render — draws story + funnel together (define
     : `<div><div class="v">£${Math.round(netAov)}</div><div class="k">avg order value</div></div>`;
   el.innerHTML=`<h3>Revenue &amp; AOV</h3><div class="bigrow"><div><div class="v">£${(revInfo.rev/1e6).toFixed(2)}m</div><div class="k">this week (web + app)</div></div>${aovCell}</div><div class="note">Net AOV is after discounts &amp; returns; gross${grossAov!=null?" (£"+Math.round(grossAov)+")":""} matches the Shopify portal. Web £${fmtInt(revInfo.web)} · App £${fmtInt(revInfo.app)}. <a onclick="openDive('revenue')">See revenue &amp; AOV over time →</a></div>`;
 })();
+function newRetHTML(){
+  const N=SNAPSHOT.ga4Channels&&SNAPSHOT.ga4Channels.newReturning;
+  if(!N||(!N.new&&!N.returning)) return '<h4>New vs Returning</h4><div class="note">Run fetch_first_touch.py to enable.</div>';
+  const nw=N.new||{sessions:0,purchases:0,revenue:0}, rt=N.returning||{sessions:0,purchases:0,revenue:0};
+  const ts=nw.sessions+rt.sessions, tr=(nw.revenue||0)+(rt.revenue||0);
+  const sh=(a,b)=>b?(100*a/b).toFixed(0)+"%":"–", cvr=o=>o.sessions?(100*o.purchases/o.sessions).toFixed(2)+"%":"–";
+  return `<h4>New vs Returning</h4><div class="sub">GA4 · sessions, conversion &amp; revenue share</div>`
+   +`<table><tr><th>Customer</th><th>Sessions</th><th>Share</th><th>Conversion</th><th>Revenue share</th></tr>`
+   +`<tr><td>New</td><td>${fmtInt(nw.sessions)}</td><td>${sh(nw.sessions,ts)}</td><td>${cvr(nw)}</td><td>${sh(nw.revenue,tr)}</td></tr>`
+   +`<tr><td>Returning</td><td>${fmtInt(rt.sessions)}</td><td>${sh(rt.sessions,ts)}</td><td>${cvr(rt)}</td><td>${sh(rt.revenue,tr)}</td></tr></table>`;
+}
 function returnsHTML(){
   const R=SNAPSHOT.returns; if(!R) return '<h4>Returns</h4><div class="note">Returns data not in this bake.</div>';
   const rate30=R.gross30?100*Math.abs(R.sum30)/R.gross30:0, rate7=R.gross7?100*Math.abs(R.sum7)/R.gross7:0;
   const rows=(R.topItems7||[]).map(x=>`<tr><td>${x.t}</td><td>£${fmtInt(Math.abs(x.v))}</td></tr>`).join("");
-  return `<h4>Returns</h4><div class="sub">Value-based (returns £ ÷ gross £) — Shopify's sales data doesn't expose item counts</div><div class="bigrow"><div><div class="v">£${(Math.abs(R.sum30)/1e6).toFixed(2)}m</div><div class="k">returned · last 30 days</div></div><div><div class="v">${rate30.toFixed(0)}%</div><div class="k">return rate · 30 days</div></div></div>`
+  return `<h4>Returns</h4><div class="sub">Value-based · £ returned ÷ gross</div><div class="bigrow"><div><div class="v">£${(Math.abs(R.sum30)/1e6).toFixed(2)}m</div><div class="k">returned · last 30 days</div></div><div><div class="v">${rate30.toFixed(0)}%</div><div class="k">return rate · 30 days</div></div></div>`
     +`<div class="note">Last 7 days: <b>£${fmtInt(Math.abs(R.sum7))}</b> returned — ${rate7.toFixed(0)}% of gross sales.</div>`
     +`<h4 style="margin-top:14px;">Most-returned products · last 7 days</h4><table><tr><th>Product</th><th>Returns £</th></tr>${rows}<tr><td colspan="2" class="cap">Embellished / structured gowns dominate returns — a fit or expectation-vs-reality signal worth a closer look on those PDPs.</td></tr></table>`;
 }
@@ -439,20 +445,22 @@ const dives=[ {k:"traffic",name:"Traffic",stat:"15-wk",teaser:"Sessions vs visit
   {k:"channels",name:"Channels",stat:"GA4",teaser:"How each channel converts — first-visit vs in-visit."},
   {k:"collections",name:"Collections",stat:"25",teaser:"Per-collection performance + 12-week trend for the top 10."},
   {k:"reviews",name:"Reviews",stat:(SNAPSHOT.reviews&&SNAPSHOT.reviews.cohort?SNAPSHOT.reviews.cohort.coveragePct+"%":"trend"),teaser:"Weekly review trend + how many new launches have any review."},
-  {k:"returns",name:"Returns",stat:(SNAPSHOT.returns?Math.round(100*Math.abs(SNAPSHOT.returns.sum30)/SNAPSHOT.returns.gross30)+"%":"—"),teaser:"Returns value, return rate & most-returned products."} ];
+  {k:"returns",name:"Returns",stat:(SNAPSHOT.returns?Math.round(100*Math.abs(SNAPSHOT.returns.sum30)/SNAPSHOT.returns.gross30)+"%":"—"),teaser:"Returns value, return rate & most-returned products."},
+  {k:"newret",name:"New vs Returning",stat:"GA4",teaser:"How new vs returning shoppers convert (GA4)."} ];
 document.getElementById("dives").innerHTML=dives.map(d=>`<div class="dive" data-dive="${d.k}"><div class="d-top"><span class="d-name">${d.name}</span><span class="d-stat">${d.stat}</span></div><div class="d-teaser">${d.teaser}</div><div class="d-link">Tap to open →</div></div>`).join("");
 document.querySelectorAll(".dive").forEach(c=>c.addEventListener("click",()=>openDive(c.dataset.dive)));
 function openDive(k, skipScroll){
   document.querySelectorAll(".dive").forEach(x=>x.classList.toggle("sel-d",x.dataset.dive===k));
   const host=document.getElementById("diveDetail"); host.innerHTML='<div class="dd" id="ddinner"></div>'; const inner=document.getElementById("ddinner");
   if(k==="returns"){ inner.innerHTML=returnsHTML(); }
+  else if(k==="newret"){ inner.innerHTML=newRetHTML(); }
   else if(k==="channels"){ inner.innerHTML=channelsHTML()+channelTrendHTML(); drawChannelTrend('sessions'); }
   else if(k==="revenue"){ inner.innerHTML=`<h4>Revenue &amp; AOV over time</h4><div class="sub">Weekly · Revenue (bars) + Gross AOV (solid, matches Shopify portal) and Net AOV (dashed, after discounts &amp; returns)</div>`
     +`<div class="toggle" id="revSeg"><button type="button" class="tg-btn active" onclick="drawRevenueTrend('all',this)">All</button><button type="button" class="tg-btn" onclick="drawRevenueTrend('web',this)">Web (Online Store)</button><button type="button" class="tg-btn" onclick="drawRevenueTrend('app',this)">App (Tapcart)</button></div>`
-    +`<div class="chart-box"><canvas id="ddRevAov"></canvas></div><div class="cap" style="margin-top:6px;">Device (mobile vs desktop) isn't available in Shopify's sales data, so the split is by channel: All / Web / App.</div>`; drawRevenueTrend('all'); }
+    +`<div class="chart-box"><canvas id="ddRevAov"></canvas></div>`; drawRevenueTrend('all'); }
   else if(k==="collections"){ inner.innerHTML=collectionsHTML()+collPatternsHTML()+collTrendHTML(); drawCollTrend(0); }
   else if(k==="traffic"){ inner.innerHTML=`<h4>Traffic — last weeks</h4><div class="sub">Sessions vs visitors (Shopify, settled weeks)</div><div class="chart-box"><canvas id="ddTraffic"></canvas></div>`+(SNAPSHOT.trafficBySource?`<h4 style="margin-top:18px;">Sessions by source</h4><div class="sub">Where the change is coming from — weekly sessions per referrer source</div><div class="chart-box"><canvas id="ddTrafficSrc"></canvas></div>`:""); drawTraffic(); drawTrafficSrc(); }
-  else if(k==="reviews"){ const co=SNAPSHOT.reviews&&SNAPSHOT.reviews.cohort; inner.innerHTML=`<h4>Product reviews — Okendo</h4><div class="sub">Reviews captured per week · new-launch vs existing products${co?` · ${fmtInt(co.withReviews)} of ${fmtInt(co.size)} new launches have a review (${co.coveragePct}%)`:""}</div><div class="chart-box"><canvas id="ddReviews"></canvas></div>${co?`<div class="cap" style="margin-top:8px;">"New launch" = products tagged New In This Month (${fmtInt(co.size)} products). ${Math.round(100-co.coveragePct)}% are live with no review — the day-1 social-proof gap. New-launch reviews use the left (pink) axis, existing the right (slate) — different scales so the smaller new-launch trend stays readable.</div>`:""}`; drawReviews(); }
+  else if(k==="reviews"){ const co=SNAPSHOT.reviews&&SNAPSHOT.reviews.cohort; inner.innerHTML=`<h4>Product reviews — Okendo</h4><div class="sub">Reviews per week · new-launch vs existing${co?` · ${co.coveragePct}% of new launches have a review`:""}</div><div class="chart-box"><canvas id="ddReviews"></canvas></div>${co?`<div class="cap" style="margin-top:8px;">${Math.round(100-co.coveragePct)}% of new launches are live with no review — the day-1 social-proof gap.</div>`:""}`; drawReviews(); }
   if(!skipScroll) host.scrollIntoView({behavior:"smooth",block:"nearest"});
 }
 function channelsHTML(){
@@ -461,12 +469,12 @@ function channelsHTML(){
   const baseline=(ti&&ts&&tu)?(tf/tu)/(ti/ts):1;
   const rows=Object.keys(G.firstTouch).map(ch=>{ const f=G.firstTouch[ch],s=G.inSession[ch]; return {ch,users:f.users,ft:f.users?f.purchases/f.users:null,is:s&&s.sessions?s.purchases/s.sessions:null}; }).filter(r=>r.users>1000).sort((a,b)=>b.users-a.users).slice(0,8);
   function role(r){ if(r.ft===null||r.is===null||r.is===0) return "–"; const m=(r.ft/r.is)/baseline; return m>=1.25?"Discovery":m<=0.8?"Closer":"Balanced"; }
-  let h='<h4>How each marketing channel converts</h4><div class="sub">GA4 web, last 90 days · first-visit (introduces a buyer) vs in-visit (closes)</div><table><tr><th>Channel</th><th>Users (90d)</th><th>First-visit</th><th>In-visit</th><th>Role</th></tr>';
+  let h='<h4>How each marketing channel converts</h4><div class="sub">GA4, last 90 days · first-visit vs in-visit</div><table><tr><th>Channel</th><th>Users (90d)</th><th>First-visit</th><th>In-visit</th><th>Role</th></tr>';
   for(const r of rows){ const isD=r.ch.toLowerCase()==="direct";
     const dir=isD?` <span style="color:var(--rose);font-weight:700;cursor:pointer;" onclick="var x=document.getElementById('chDirectWhy');x.style.display=(x.style.display==='table-row'?'none':'table-row');">⚠ why?</span>`:"";
     h+=`<tr><td>${r.ch}${dir}</td><td>${fmtInt(r.users)}</td><td><b>${r.ft!==null?pct(r.ft):"–"}</b></td><td>${r.is!==null?pct(r.is):"–"}</td><td>${role(r)}</td></tr>`;
     if(isD) h+=`<tr id="chDirectWhy" style="display:none;"><td colspan="5" style="background:#fff;color:var(--rose-deep);font-size:11.5px;line-height:1.5;padding:9px;">Direct is GA4's catch-all — returning customers, bookmarks, in-app webviews, links from messaging apps, and traffic lost to consent refusal all land here. Its high first-visit conversion is mostly people who already knew Oh Polly, not a channel you can scale. Treat it as a measurement gap, not an acquisition win.</td></tr>`; }
-  h+=`<tr><td colspan="5" class="cap">Role compares first-visit vs in-visit against the ~${baseline.toFixed(1)}× all-channel average. Direct is GA4's catch-all (returning, app, untracked) — a measurement gap, not a scalable channel. Consent mode hides 20–40% of UK traffic. Window ${G.window.start} → ${G.window.end}.</td></tr></table>`;
+  h+=`<tr><td colspan="5" class="cap">Direct is GA4's catch-all (returning, app, untracked) — a measurement gap, not a scalable channel.</td></tr></table>`;
   return h;
 }
 function collectionsHTML(){
@@ -544,7 +552,7 @@ function drawTrafficSrc(){ const S=SNAPSHOT.trafficBySource; if(!S||!S.series||!
 let _cht=null;
 function channelTrendHTML(){
   if(!SNAPSHOT.channelTrend) return "";
-  return `<h4 style="margin-top:22px;">Channel performance over time</h4><div class="sub">Weekly, by referrer source · toggle the metric; click a channel in the legend to hide it</div>`
+  return `<h4 style="margin-top:22px;">Channel performance over time</h4><div class="sub">Weekly by source · toggle metric</div>`
     +`<div class="toggle" id="chMetric"><button type="button" class="tg-btn active" onclick="drawChannelTrend('sessions',this)">Sessions</button><button type="button" class="tg-btn" onclick="drawChannelTrend('atc',this)">ATC rate</button><button type="button" class="tg-btn" onclick="drawChannelTrend('cvr',this)">CVR</button></div>`
     +`<div class="chart-box"><canvas id="ddChannelTrend"></canvas></div>`;
 }
@@ -677,7 +685,7 @@ window.toggleSection=function(key){ const b=document.getElementById(key+"Body"),
     {keys:["Checkout → Purchase"], title:"Checkout → Purchase", rate:r3,
      prize:`A <b>+1 point</b> lift (to ${pct(r3+0.01,1)}) ≈ <b>${Math.round(inc3)} more orders/week</b> · ~${money(inc3*aov)}/wk.`}
   ];
-  let h=`<p class="sub" style="margin-bottom:14px;">Ordered by leverage. Each area shows the rough weekly upside of improving it (web funnel, latest week × AOV), then the tests aimed at it — run one or two a week.</p>`;
+  let h=`<p class="sub" style="margin-bottom:14px;">Ordered by leverage — the estimated weekly upside of fixing each area.</p>`;
   for(const g of groups){
     const tests=TB.tests.filter(t=>g.keys.includes(t.area));
     if(!tests.length) continue;
@@ -688,7 +696,7 @@ window.toggleSection=function(key){ const b=document.getElementById(key+"Body"),
     }
     h+=`</div>`;
   }
-  h+=`<div class="cap" style="margin-top:6px;">Prizes are rough sizing, not forecasts. Editable in test_backlog.json (add rows; status this-week / running / idea / done). No connector for Shoplift / Nosto / BAO — results logged manually. Updated ${TB.updated||""}.</div>`;
+  h+=`<div class="cap" style="margin-top:6px;">Rough sizing, not forecasts.</div>`;
   host.innerHTML=h;
 })();
 
@@ -717,8 +725,7 @@ function renderBrief(){
   if(RV&&RV.cohort&&RV.cohort.coveragePct<60) actions.push(`<li><b>Seed reviews on new drops.</b> Close the day-one gap (influencer / community / early access) — cheap conversion lift where it's missing.</li>`);
   el.innerHTML=`<div class="brief-h">This week in a nutshell</div><p>${headline}</p>`
     +`<div class="brief-sub">What changed</div><ul>${changed}</ul>`
-    +`<div class="brief-sub">What to do</div><ul>${actions.slice(0,3).join("")}</ul>`
-    +`<div class="brief-cap">Auto-generated from this week's data — refreshes every bake.</div>`;
+    +`<div class="brief-sub">What to do</div><ul>${actions.slice(0,3).join("")}</ul>`;
 }
 renderBrief();
 
