@@ -111,6 +111,8 @@
 
   .split2{display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-top:8px;}
   .panel{border:1px solid var(--line); border-radius:12px; padding:16px 18px;}
+  .panel.clickable{cursor:pointer; transition:all .12s;}
+  .panel.clickable:hover{border-color:var(--rose); background:var(--blush-soft);}
   .panel h3{font-size:13px; text-transform:uppercase; letter-spacing:.6px; color:var(--ink-3); margin:0 0 10px; font-weight:700;}
   .bigrow{display:flex; gap:24px; align-items:baseline; margin-bottom:8px;}
   .bigrow .v{font-size:26px; font-weight:700; letter-spacing:-.5px;} .bigrow .k{font-size:12px; color:var(--ink-3);}
@@ -174,10 +176,9 @@
   <div class="eyebrow"><span class="num">03</span> Details &amp; deep dives</div>
   <p class="lead">Money, customers, and a click into each area.</p>
   <div class="split2">
-    <div class="panel" id="revPanel"></div>
-    <div class="panel" id="reviewPanel"></div>
+    <div class="panel clickable" id="revPanel" onclick="openDive('revenue')"></div>
+    <div class="panel clickable" id="reviewPanel" onclick="openDive('reviews')"></div>
   </div>
-  <div class="panel" id="returnsPanel" style="margin:14px 0;"></div>
   <div class="dives" id="dives"></div>
   <div id="diveDetail"></div>
 </section>
@@ -205,7 +206,7 @@
   const PW = "OhPolly757x49";
   if (sessionStorage.getItem("fp_auth") === "1") document.getElementById("gate").style.display = "none";
   window.checkGate = function(){
-    if (document.getElementById("gate-input").value === PW){ sessionStorage.setItem("fp_auth","1"); document.getElementById("gate").style.display="none"; }
+    if (document.getElementById("gate-input").value === PW){ sessionStorage.setItem("fp_auth","1"); document.getElementById("gate").style.display="none"; window.scrollTo(0,0); }
     else { document.getElementById("gate-err").textContent="Incorrect password"; document.getElementById("gate-input").value=""; document.getElementById("gate-input").focus(); }
   };
   document.addEventListener("keydown", e=>{ if(e.key==="Enter" && document.getElementById("gate").style.display!=="none") checkGate(); });
@@ -388,15 +389,14 @@ renderStory("wow");  // initial render — draws story + funnel together (define
     : `<div><div class="v">£${Math.round(netAov)}</div><div class="k">avg order value</div></div>`;
   el.innerHTML=`<h3>Revenue &amp; AOV</h3><div class="bigrow"><div><div class="v">£${(revInfo.rev/1e6).toFixed(2)}m</div><div class="k">this week (web + app)</div></div>${aovCell}</div><div class="note">Net AOV is after discounts &amp; returns; gross${grossAov!=null?" (£"+Math.round(grossAov)+")":""} matches the Shopify portal. Web £${fmtInt(revInfo.web)} · App £${fmtInt(revInfo.app)}. <a onclick="openDive('revenue')">See revenue &amp; AOV over time →</a></div>`;
 })();
-(function renderReturns(){
-  const el=document.getElementById("returnsPanel"); if(!el) return; const R=SNAPSHOT.returns;
-  if(!R){ el.style.display="none"; return; }
+function returnsHTML(){
+  const R=SNAPSHOT.returns; if(!R) return '<h4>Returns</h4><div class="note">Returns data not in this bake.</div>';
   const rate30=R.gross30?100*Math.abs(R.sum30)/R.gross30:0, rate7=R.gross7?100*Math.abs(R.sum7)/R.gross7:0;
   const rows=(R.topItems7||[]).map(x=>`<tr><td>${x.t}</td><td>£${fmtInt(Math.abs(x.v))}</td></tr>`).join("");
-  el.innerHTML=`<h3>Returns</h3><div class="bigrow"><div><div class="v">£${(Math.abs(R.sum30)/1e6).toFixed(2)}m</div><div class="k">returned · last 30 days</div></div><div><div class="v">${rate30.toFixed(0)}%</div><div class="k">return rate (value)</div></div></div>`
-    +`<div class="note">Last 7 days: <b>£${fmtInt(Math.abs(R.sum7))}</b> returned — ${rate7.toFixed(0)}% of gross sales. Rate is value-based (returns £ ÷ gross £); Shopify's sales data doesn't expose item counts.</div>`
+  return `<h4>Returns</h4><div class="sub">Value-based (returns £ ÷ gross £) — Shopify's sales data doesn't expose item counts</div><div class="bigrow"><div><div class="v">£${(Math.abs(R.sum30)/1e6).toFixed(2)}m</div><div class="k">returned · last 30 days</div></div><div><div class="v">${rate30.toFixed(0)}%</div><div class="k">return rate · 30 days</div></div></div>`
+    +`<div class="note">Last 7 days: <b>£${fmtInt(Math.abs(R.sum7))}</b> returned — ${rate7.toFixed(0)}% of gross sales.</div>`
     +`<h4 style="margin-top:14px;">Most-returned products · last 7 days</h4><table><tr><th>Product</th><th>Returns £</th></tr>${rows}<tr><td colspan="2" class="cap">Embellished / structured gowns dominate returns — a fit or expectation-vs-reality signal worth a closer look on those PDPs.</td></tr></table>`;
-})();
+}
 (function reviewPanel(){
   const el=document.getElementById("reviewPanel"); const R=SNAPSHOT.reviews;
   if(!R||!R.daily){ el.innerHTML='<h3>Customer reviews</h3><div class="note">Run fetch_okendo_reviews.py to enable.</div>'; return; }
@@ -413,20 +413,22 @@ renderStory("wow");  // initial render — draws story + funnel together (define
 const dives=[ {k:"traffic",name:"Traffic",stat:"15-wk",teaser:"Sessions vs visitors; the reach trend behind the slide."},
   {k:"channels",name:"Channels",stat:"GA4",teaser:"How each channel converts — first-visit vs in-visit."},
   {k:"collections",name:"Collections",stat:"25",teaser:"Per-collection performance + 12-week trend for the top 10."},
-  {k:"reviews",name:"Reviews",stat:(SNAPSHOT.reviews&&SNAPSHOT.reviews.cohort?SNAPSHOT.reviews.cohort.coveragePct+"%":"trend"),teaser:"Weekly review trend + how many new launches have any review."} ];
+  {k:"reviews",name:"Reviews",stat:(SNAPSHOT.reviews&&SNAPSHOT.reviews.cohort?SNAPSHOT.reviews.cohort.coveragePct+"%":"trend"),teaser:"Weekly review trend + how many new launches have any review."},
+  {k:"returns",name:"Returns",stat:(SNAPSHOT.returns?Math.round(100*Math.abs(SNAPSHOT.returns.sum30)/SNAPSHOT.returns.gross30)+"%":"—"),teaser:"Returns value, return rate & most-returned products."} ];
 document.getElementById("dives").innerHTML=dives.map(d=>`<div class="dive" data-dive="${d.k}"><div class="d-top"><span class="d-name">${d.name}</span><span class="d-stat">${d.stat}</span></div><div class="d-teaser">${d.teaser}</div><div class="d-link">Tap to open →</div></div>`).join("");
 document.querySelectorAll(".dive").forEach(c=>c.addEventListener("click",()=>openDive(c.dataset.dive)));
-function openDive(k){
+function openDive(k, skipScroll){
   document.querySelectorAll(".dive").forEach(x=>x.classList.toggle("sel-d",x.dataset.dive===k));
   const host=document.getElementById("diveDetail"); host.innerHTML='<div class="dd" id="ddinner"></div>'; const inner=document.getElementById("ddinner");
-  if(k==="channels"){ inner.innerHTML=channelsHTML()+channelTrendHTML(); drawChannelTrend('sessions'); }
+  if(k==="returns"){ inner.innerHTML=returnsHTML(); }
+  else if(k==="channels"){ inner.innerHTML=channelsHTML()+channelTrendHTML(); drawChannelTrend('sessions'); }
   else if(k==="revenue"){ inner.innerHTML=`<h4>Revenue &amp; AOV over time</h4><div class="sub">Weekly · Revenue (bars) + Gross AOV (solid, matches Shopify portal) and Net AOV (dashed, after discounts &amp; returns)</div>`
     +`<div class="toggle" id="revSeg"><button type="button" class="tg-btn active" onclick="drawRevenueTrend('all',this)">All</button><button type="button" class="tg-btn" onclick="drawRevenueTrend('web',this)">Web (Online Store)</button><button type="button" class="tg-btn" onclick="drawRevenueTrend('app',this)">App (Tapcart)</button></div>`
     +`<div class="chart-box"><canvas id="ddRevAov"></canvas></div><div class="cap" style="margin-top:6px;">Device (mobile vs desktop) isn't available in Shopify's sales data, so the split is by channel: All / Web / App.</div>`; drawRevenueTrend('all'); }
   else if(k==="collections"){ inner.innerHTML=collectionsHTML()+collPatternsHTML()+collTrendHTML(); drawCollTrend(0); }
   else if(k==="traffic"){ inner.innerHTML=`<h4>Traffic — last weeks</h4><div class="sub">Sessions vs visitors (Shopify, settled weeks)</div><div class="chart-box"><canvas id="ddTraffic"></canvas></div>`+(SNAPSHOT.trafficBySource?`<h4 style="margin-top:18px;">Sessions by source</h4><div class="sub">Where the change is coming from — weekly sessions per referrer source</div><div class="chart-box"><canvas id="ddTrafficSrc"></canvas></div>`:""); drawTraffic(); drawTrafficSrc(); }
   else if(k==="reviews"){ const co=SNAPSHOT.reviews&&SNAPSHOT.reviews.cohort; inner.innerHTML=`<h4>Product reviews — Okendo</h4><div class="sub">Reviews captured per week · new-launch vs existing products${co?` · ${fmtInt(co.withReviews)} of ${fmtInt(co.size)} new launches have a review (${co.coveragePct}%)`:""}</div><div class="chart-box"><canvas id="ddReviews"></canvas></div>${co?`<div class="cap" style="margin-top:8px;">"New launch" = products tagged New In This Month (${fmtInt(co.size)} products). ${Math.round(100-co.coveragePct)}% are live with no review — the day-1 social-proof gap. New-launch reviews use the left (pink) axis, existing the right (slate) — different scales so the smaller new-launch trend stays readable.</div>`:""}`; drawReviews(); }
-  host.scrollIntoView({behavior:"smooth",block:"nearest"});
+  if(!skipScroll) host.scrollIntoView({behavior:"smooth",block:"nearest"});
 }
 function channelsHTML(){
   const G=SNAPSHOT.ga4Channels; if(!G||!G.firstTouch) return '<h4>Channels</h4><div class="note">GA4 channel data not in this bake.</div>';
@@ -559,7 +561,7 @@ function drawReviews(){ const R=SNAPSHOT.reviews; if(!R||!R.daily) return;
         yExist:{position:"right",beginAtZero:true,title:{display:true,text:"Existing / wk",color:"#334155",font:{size:10}},ticks:{color:"#334155",font:{size:10}}},
         x:{ticks:{font:{size:9},maxRotation:45,autoSkip:true}}}}}); }
 
-openDive("channels"); // open the channel detail by default so it's visible
+openDive("channels", true); // open channels by default WITHOUT scrolling (page stays at top on load)
 
 function renderExecStrip(mode){
   const el=document.getElementById("execstrip"); if(!el) return;
