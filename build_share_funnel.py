@@ -114,6 +114,29 @@ with open(OUTPUT, "w") as f:
 size_kb = os.path.getsize(OUTPUT) // 1024
 print(f"Baked {OUTPUT} ({size_kb} KB, data to {data['bakedAt']}, store: {data['store']})")
 
+# ---------- 2b. Validate JS syntax (never publish a broken dashboard) ----------
+# The dashboard is useless if the inline JS has a syntax error, and it fails
+# silently in the browser. If node is available, hard-check the baked script
+# and REFUSE to push on error. (Added after a missing-brace slipped to prod.)
+import shutil, re as _re
+if shutil.which("node"):
+    _scripts = _re.findall(r"<script[^>]*>(.*?)</script>", html, _re.S)
+    _js = "\n;\n".join(_scripts)
+    _tmp = os.path.join(HERE, ".jscheck.js")
+    with open(_tmp, "w") as _f:
+        _f.write(_js)
+    _r = subprocess.run(["node", "--check", _tmp], capture_output=True, text=True)
+    try:
+        os.remove(_tmp)
+    except OSError:
+        pass
+    if _r.returncode != 0:
+        fail("Baked dashboard has a JS SYNTAX ERROR — NOT pushing. Fix the template.\n"
+             + (_r.stderr or _r.stdout)[-800:])
+    print("JS syntax check passed.")
+else:
+    print("WARNING: node not found — skipping JS syntax check (install node to enable the guard).")
+
 # ---------- 3. Push to GitHub ----------
 if "--no-push" in sys.argv:
     print("Skipping push (--no-push)")

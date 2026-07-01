@@ -330,6 +330,7 @@ function renderStory(mode){
   const cc=document.getElementById("changedScope"); if(cc) cc.textContent = (mode==="mom")?"What changed this month":"What changed this week";
   document.querySelectorAll("#storyToggle .tg-btn").forEach(b=>b.classList.toggle("active", b.dataset.mode===mode));
   if(typeof renderFunnel==="function") renderFunnel(mode);
+  if(typeof renderExecStrip==="function") renderExecStrip(mode);
 }
 window.setStoryMode = renderStory;
 if(!HAS_MOM){ const t=document.getElementById("storyToggle"); if(t) t.style.display="none"; }
@@ -378,7 +379,7 @@ renderStory("wow");  // initial render — draws story + funnel together (define
 (function revPanel(){
   const el=document.getElementById("revPanel");
   if(!revInfo){ el.innerHTML='<h3>Revenue &amp; AOV</h3><div class="note">Revenue data not in this bake.</div>'; return; }
-  el.innerHTML=`<h3>Revenue &amp; AOV</h3><div class="bigrow"><div><div class="v">£${(revInfo.rev/1e6).toFixed(2)}m</div><div class="k">this week (web + app)</div></div><div><div class="v">£${Math.round(revInfo.aov)}</div><div class="k">avg order value</div></div></div><div class="note">Web £${fmtInt(revInfo.web)} · App £${fmtInt(revInfo.app)}. Revenue is holding while sessions fall — watch for the lag if traffic keeps sliding.</div>`;
+  el.innerHTML=`<h3>Revenue &amp; AOV</h3><div class="bigrow"><div><div class="v">£${(revInfo.rev/1e6).toFixed(2)}m</div><div class="k">this week (web + app)</div></div><div><div class="v">£${Math.round(revInfo.aov)}</div><div class="k">avg order value</div></div></div><div class="note">Web £${fmtInt(revInfo.web)} · App £${fmtInt(revInfo.app)}. Revenue is holding while sessions fall — watch for the lag if traffic keeps sliding. <a onclick="openDive('revenue')">See revenue &amp; AOV over time →</a></div>`;
 })();
 (function reviewPanel(){
   const el=document.getElementById("reviewPanel"); const R=SNAPSHOT.reviews;
@@ -402,7 +403,8 @@ document.querySelectorAll(".dive").forEach(c=>c.addEventListener("click",()=>ope
 function openDive(k){
   document.querySelectorAll(".dive").forEach(x=>x.classList.toggle("sel-d",x.dataset.dive===k));
   const host=document.getElementById("diveDetail"); host.innerHTML='<div class="dd" id="ddinner"></div>'; const inner=document.getElementById("ddinner");
-  if(k==="channels") inner.innerHTML=channelsHTML();
+  if(k==="channels"){ inner.innerHTML=channelsHTML()+channelTrendHTML(); drawChannelTrend('sessions'); }
+  else if(k==="revenue"){ inner.innerHTML=`<h4>Revenue &amp; AOV over time</h4><div class="sub">Weekly · web + app (Shopify sales)</div><div class="chart-box"><canvas id="ddRevAov"></canvas></div>`; drawRevenueTrend(); }
   else if(k==="collections"){ inner.innerHTML=collectionsHTML()+collPatternsHTML()+collTrendHTML(); drawCollTrend(0); }
   else if(k==="traffic"){ inner.innerHTML=`<h4>Traffic — last weeks</h4><div class="sub">Sessions vs visitors (Shopify, settled weeks)</div><div class="chart-box"><canvas id="ddTraffic"></canvas></div>`+(SNAPSHOT.trafficBySource?`<h4 style="margin-top:18px;">Sessions by source</h4><div class="sub">Where the change is coming from — weekly sessions per referrer source</div><div class="chart-box"><canvas id="ddTrafficSrc"></canvas></div>`:""); drawTraffic(); drawTrafficSrc(); }
   else if(k==="reviews"){ const co=SNAPSHOT.reviews&&SNAPSHOT.reviews.cohort; inner.innerHTML=`<h4>Product reviews — Okendo</h4><div class="sub">Reviews captured per week · new-launch vs existing products${co?` · ${fmtInt(co.withReviews)} of ${fmtInt(co.size)} new launches have a review (${co.coveragePct}%)`:""}</div><div class="chart-box"><canvas id="ddReviews"></canvas></div>${co?`<div class="cap" style="margin-top:8px;">"New launch" = products tagged New In This Month (${fmtInt(co.size)} products). ${Math.round(100-co.coveragePct)}% are live with no review — the day-1 social-proof gap. New-launch reviews use the left (pink) axis, existing the right (slate) — different scales so the smaller new-launch trend stays readable.</div>`:""}`; drawReviews(); }
@@ -493,7 +495,34 @@ let _tsc=null;
 function drawTrafficSrc(){ const S=SNAPSHOT.trafficBySource; if(!S||!S.series||!window.Chart) return;
   const colors={direct:"#b14f6b",search:"#0e6e48",social:"#d98a3d",email:"#6b5bd1"};
   const ds=S.sources.map(s=>({label:s.charAt(0).toUpperCase()+s.slice(1),data:S.series[s],borderColor:colors[s]||"#94a3b8",backgroundColor:colors[s]||"#94a3b8",borderWidth:2,pointRadius:0,tension:.25}));
-  if(_tsc)_tsc.destroy(); _tsc=new Chart(document.getElementById("ddTrafficSrc"),{type:"line",data:{labels:S.weeks.map(w=>fmtDate(w)),datasets:ds},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{boxWidth:12,font:{size:11}}}},scales:{y:{ticks:{callback:v=>(v/1000)+"k",font:{size:10}}},x:{ticks:{font:{size:9},maxRotation:45,autoSkip:true}}}}); }
+  if(_tsc)_tsc.destroy(); _tsc=new Chart(document.getElementById("ddTrafficSrc"),{type:"line",data:{labels:S.weeks.map(w=>fmtDate(w)),datasets:ds},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{boxWidth:12,font:{size:11}}}},scales:{y:{ticks:{callback:v=>(v/1000)+"k",font:{size:10}}},x:{ticks:{font:{size:9},maxRotation:45,autoSkip:true}}}}}); }
+let _cht=null;
+function channelTrendHTML(){
+  if(!SNAPSHOT.channelTrend) return "";
+  return `<h4 style="margin-top:22px;">Channel performance over time</h4><div class="sub">Weekly, by referrer source · toggle the metric; click a channel in the legend to hide it</div>`
+    +`<div class="toggle" id="chMetric"><button type="button" class="tg-btn active" onclick="drawChannelTrend('sessions',this)">Sessions</button><button type="button" class="tg-btn" onclick="drawChannelTrend('atc',this)">ATC rate</button><button type="button" class="tg-btn" onclick="drawChannelTrend('cvr',this)">CVR</button></div>`
+    +`<div class="chart-box"><canvas id="ddChannelTrend"></canvas></div>`;
+}
+function drawChannelTrend(metric,btn){ const T=SNAPSHOT.channelTrend; if(!T||!window.Chart) return; metric=metric||"sessions";
+  if(btn) document.querySelectorAll("#chMetric .tg-btn").forEach(b=>b.classList.toggle("active",b===btn));
+  const colors={direct:"#b14f6b",search:"#0e6e48",social:"#d98a3d",email:"#6b5bd1"}, isPct=(metric!=="sessions");
+  const ds=T.channels.map(ch=>{ const s=T.series[ch]; let data;
+    if(metric==="sessions") data=s.sessions;
+    else if(metric==="atc") data=s.sessions.map((v,i)=>v?100*s.atc[i]/v:0);
+    else data=s.sessions.map((v,i)=>v?100*s.purchase[i]/v:0);
+    return {label:ch.charAt(0).toUpperCase()+ch.slice(1),data:data,borderColor:colors[ch]||"#94a3b8",backgroundColor:colors[ch]||"#94a3b8",borderWidth:2,pointRadius:0,tension:.25}; });
+  if(_cht)_cht.destroy(); _cht=new Chart(document.getElementById("ddChannelTrend"),{type:"line",data:{labels:T.weeks.map(w=>fmtDate(w)),datasets:ds},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{boxWidth:12,font:{size:11}}}},scales:{y:{ticks:{callback:v=>isPct?v.toFixed(1)+"%":(v>=1000?(v/1000)+"k":v),font:{size:10}}},x:{ticks:{font:{size:9},maxRotation:45,autoSkip:true}}}}}); }
+let _rav=null;
+function drawRevenueTrend(){ const R=SNAPSHOT.revenueTrend; if(!R||!window.Chart) return;
+  const rev=R.revenue, aov=R.revenue.map((v,i)=>R.orders[i]?v/R.orders[i]:0);
+  if(_rav)_rav.destroy(); _rav=new Chart(document.getElementById("ddRevAov"),{data:{labels:R.weeks.map(w=>fmtDate(w)),datasets:[
+    {type:"bar",label:"Revenue",data:rev,backgroundColor:"#e9b9c6",yAxisID:"yR",order:2},
+    {type:"line",label:"AOV",data:aov,borderColor:"#0e6e48",borderWidth:2,pointRadius:2,tension:.25,yAxisID:"yA",order:1}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{boxWidth:12,font:{size:11}}}},
+      scales:{yR:{position:"left",beginAtZero:true,title:{display:true,text:"Revenue / wk",font:{size:10}},ticks:{callback:v=>"£"+(v/1e6).toFixed(1)+"m",font:{size:10}}},
+        yA:{position:"right",beginAtZero:true,title:{display:true,text:"AOV",color:"#0e6e48",font:{size:10}},ticks:{color:"#0e6e48",callback:v=>"£"+Math.round(v),font:{size:10}},grid:{drawOnChartArea:false}},
+        x:{ticks:{font:{size:9},maxRotation:45,autoSkip:true}}}}}); }
 function drawReviews(){ const R=SNAPSHOT.reviews; if(!R||!R.daily) return;
   // bucket daily -> weeks (Monday start) for a readable trend line instead of 120 daily bars
   const wk={}; for(const d of Object.keys(R.daily)){ const dt=new Date(d+"T12:00:00"); const off=(dt.getDay()+6)%7; const mon=new Date(dt); mon.setDate(dt.getDate()-off); const key=qd(mon); (wk[key]=wk[key]||{n:0,e:0}); wk[key].n+=R.daily[d].new||0; wk[key].e+=R.daily[d].existing||0; }
@@ -510,7 +539,7 @@ function drawReviews(){ const R=SNAPSHOT.reviews; if(!R||!R.daily) return;
 
 openDive("channels"); // open the channel detail by default so it's visible
 
-(function renderExecStrip(){
+function renderExecStrip(mode){
   const el=document.getElementById("execstrip"); if(!el) return;
   function weekAgg(daily){ const w={}; (daily||[]).forEach(r=>{ const dt=new Date(r[0].slice(0,10)+"T12:00:00"); const off=(dt.getDay()+6)%7; const m=new Date(dt); m.setDate(dt.getDate()-off); const k=qd(m); w[k]=(w[k]||0)+(+r[2]||0); }); return w; }
   let revSeries=[];
@@ -519,18 +548,28 @@ openDive("channels"); // open the channel detail by default so it's visible
   const TW=SNAPSHOT.trafficWeekly, WK=SNAPSHOT.weekly, M=SNAPSHOT.monthly;
   const sessSeries=(TW&&TW.rows)?TW.rows.map(x=>+x[1]):[];
   const convSeries=(WK&&WK.rows)?WK.rows.map(x=>(+x[1])?100*(+x[4])/(+x[1]):0).slice(-12):[];
-  let dRev=null,dSess=null,cvrNow=null,dCvr=null;
-  if(M&&M.rev&&M.funnel){ dRev=relDelta(M.rev.cur.revenue,M.rev.prev.revenue); dSess=relDelta(M.funnel.cur.sessions,M.funnel.prev.sessions);
-    cvrNow=M.funnel.cur.sessions?M.funnel.cur.purchase/M.funnel.cur.sessions:0; const cp=M.funnel.prev.sessions?M.funnel.prev.purchase/M.funnel.prev.sessions:0; dCvr=relDelta(cvrNow,cp); }
-  const tiles=[
-    {lab:"Revenue", big:M?("£"+(M.rev.cur.revenue/1e6).toFixed(2)+"m"):"—", d:dRev, series:revSeries, color:"#b14f6b", cap:"last 4 weeks"},
-    {lab:"Traffic", big:M?fmtInt(M.funnel.cur.sessions):"—", d:dSess, series:sessSeries, color:"#b14f6b", cap:"weekly sessions"},
-    {lab:"Conversion", big:cvrNow!=null?pct(cvrNow,2):"—", d:dCvr, series:convSeries, color:"#0e6e48", cap:"sessions → purchase"}
-  ];
+  let tiles;
+  if(mode==="mom" && M && M.rev && M.funnel){
+    const dRev=relDelta(M.rev.cur.revenue,M.rev.prev.revenue), dSess=relDelta(M.funnel.cur.sessions,M.funnel.prev.sessions);
+    const cvrNow=M.funnel.cur.sessions?M.funnel.cur.purchase/M.funnel.cur.sessions:0, cp=M.funnel.prev.sessions?M.funnel.prev.purchase/M.funnel.prev.sessions:0, dCvr=relDelta(cvrNow,cp);
+    tiles=[
+      {lab:"Revenue", big:"£"+(M.rev.cur.revenue/1e6).toFixed(2)+"m", d:dRev, series:revSeries, color:"#b14f6b", cap:"last 4 weeks"},
+      {lab:"Traffic", big:fmtInt(M.funnel.cur.sessions), d:dSess, series:sessSeries, color:"#b14f6b", cap:"sessions · last 4 weeks"},
+      {lab:"Conversion", big:pct(cvrNow,2), d:dCvr, series:convSeries, color:"#0e6e48", cap:"sess → purchase · 4 weeks"}
+    ];
+  } else {
+    const dSess=relDelta(cur.sessions,baseW.sessions);
+    const cvrNow=cur.sessions?cur.purchase/cur.sessions:0, cvrBase=baseW.sessions?baseW.purchase/baseW.sessions:0, dCvr=relDelta(cvrNow,cvrBase);
+    tiles=[
+      {lab:"Revenue", big:revInfo?("£"+(revInfo.rev/1e6).toFixed(2)+"m"):"—", d:revInfo?revInfo.dRev:null, series:revSeries, color:"#b14f6b", cap:"this week"},
+      {lab:"Traffic", big:fmtInt(cur.sessions), d:dSess, series:sessSeries, color:"#b14f6b", cap:"sessions · this week"},
+      {lab:"Conversion", big:pct(cvrNow,2), d:dCvr, series:convSeries, color:"#0e6e48", cap:"sess → purchase · this week"}
+    ];
+  }
   el.innerHTML=tiles.map((t,i)=>`<div class="etile"><div class="etile-top"><span class="etile-lab">${t.lab}</span>${t.d!=null?`<span class="delta ${deltaCls(t.d)}">${fmtSigned(t.d)}</span>`:""}</div><div class="etile-big">${t.big}</div><div class="etile-cap">${t.cap}</div><canvas id="espark${i}"></canvas></div>`).join("");
   if(window.Chart) tiles.forEach((t,i)=>{ const c=document.getElementById("espark"+i); if(!c||!t.series.length) return;
     new Chart(c,{type:"line",data:{labels:t.series.map((_,j)=>j),datasets:[{data:t.series,borderColor:t.color,borderWidth:2,pointRadius:0,tension:.35,fill:true,backgroundColor:t.color+"22"}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{enabled:false}},scales:{x:{display:false},y:{display:false}}}}); });
-})();
+}
 
 window.toggleSection=function(key){ const b=document.getElementById(key+"Body"), c=document.getElementById(key+"Chev"); if(!b) return;
   const open=b.style.display!=="none"; b.style.display=open?"none":"block"; if(c) c.textContent=open?"▸ show":"▾ hide"; };
