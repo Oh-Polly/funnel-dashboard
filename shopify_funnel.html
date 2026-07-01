@@ -706,7 +706,7 @@ function renderBrief(){
     if(dAov!=null&&Math.abs(dAov)>0.03) parts.push([2+Math.abs(dAov),`<b>Average order value ${fmtSigned(dAov)}</b> (£${Math.round(aP)} → £${Math.round(aN)}) — ${dAov<0?"a softer basket compounding the traffic drop":"basket strength cushioning the traffic drop"}.`]);
     parts.push([1,`Conversion ${fmtSigned(dCvr)} — ${dCvr!=null&&Math.abs(dCvr)<0.03?"steady; on-site isn't the problem":"the on-site shift to watch"}.`]);
   }
-  if(TB&&TB.series){ let worst=null; for(const c of TB.channels){ const s=TB.series[c]; if(!s||s.length<2) continue; const d=relDelta(s[s.length-1],s[0]); if(d!=null&&(worst===null||d<worst.d)) worst={c,d}; }
+  if(TB&&TB.sources&&TB.series){ let worst=null; for(const c of TB.sources){ const s=TB.series[c]; if(!s||s.length<2) continue; const d=relDelta(s[s.length-1],s[0]); if(d!=null&&(worst===null||d<worst.d)) worst={c,d}; }
     if(worst&&worst.d<-0.05) parts.push([2.5,`<b>${worst.c.charAt(0).toUpperCase()+worst.c.slice(1)}</b> is the weakest channel (${fmtSigned(worst.d)} over the window) — worth pinning down.`]); }
   if(R&&R.gross30){ const rate=100*Math.abs(R.sum30)/R.gross30; if(rate>25) parts.push([2.8,`<b>Returns at ${rate.toFixed(0)}% of gross</b> (£${(Math.abs(R.sum30)/1e6).toFixed(1)}m/30d) — gross figures overstate true contribution; embellished gowns lead.`]); }
   if(RV&&RV.cohort){ const c=RV.cohort.coveragePct; if(c<60) parts.push([1.5,`<b>${Math.round(100-c)}% of new launches have no review</b> — a day-one social-proof gap on the products that most need it.`]); }

@@ -114,28 +114,47 @@ with open(OUTPUT, "w") as f:
 size_kb = os.path.getsize(OUTPUT) // 1024
 print(f"Baked {OUTPUT} ({size_kb} KB, data to {data['bakedAt']}, store: {data['store']})")
 
-# ---------- 2b. Validate JS syntax (never publish a broken dashboard) ----------
-# The dashboard is useless if the inline JS has a syntax error, and it fails
-# silently in the browser. If node is available, hard-check the baked script
-# and REFUSE to push on error. (Added after a missing-brace slipped to prod.)
+# ---------- 2b. Validate JS syntax AND runtime (never publish a broken dashboard) ----------
+# Syntax check alone missed a runtime bug (undefined field) that blanked the page,
+# so we also EXECUTE the dashboard's own scripts under a stubbed DOM and refuse to
+# push if anything throws at load. Excludes the inlined Chart.js bundle (browser-only).
 import shutil, re as _re
 if shutil.which("node"):
-    _scripts = _re.findall(r"<script[^>]*>(.*?)</script>", html, _re.S)
+    _scripts = [b for b in _re.findall(r"<script[^>]*>(.*?)</script>", html, _re.S)
+                if ("SNAPSHOT" in b or "checkGate" in b)]
     _js = "\n;\n".join(_scripts)
     _tmp = os.path.join(HERE, ".jscheck.js")
     with open(_tmp, "w") as _f:
         _f.write(_js)
     _r = subprocess.run(["node", "--check", _tmp], capture_output=True, text=True)
-    try:
-        os.remove(_tmp)
-    except OSError:
-        pass
     if _r.returncode != 0:
-        fail("Baked dashboard has a JS SYNTAX ERROR — NOT pushing. Fix the template.\n"
-             + (_r.stderr or _r.stdout)[-800:])
-    print("JS syntax check passed.")
+        try: os.remove(_tmp)
+        except OSError: pass
+        fail("Baked dashboard has a JS SYNTAX ERROR — NOT pushing.\n" + (_r.stderr or _r.stdout)[-800:])
+    _harness = os.path.join(HERE, ".jsruntime.js")
+    with open(_harness, "w") as _f:
+        _f.write("const fs=require('fs');const code=fs.readFileSync(%r,'utf8');\n" % _tmp)
+        _f.write(
+"function fakeEl(){return {set innerHTML(v){},get innerHTML(){return '';},style:{},"
+"classList:{toggle(){},add(){},remove(){},contains(){return false;}},addEventListener(){},"
+"querySelectorAll(){return [];},closest(){return fakeEl();},dataset:{},textContent:'',"
+"getContext(){return {};},appendChild(){}};}\n"
+"global.window=global;\n"
+"global.document={getElementById(){return fakeEl();},querySelectorAll(){return [];},"
+"querySelector(){return fakeEl();},addEventListener(){},createElement(){return fakeEl();}};\n"
+"global.sessionStorage={getItem(){return null;},setItem(){}};global.history={};\n"
+"function Chart(){return {destroy(){}};}Chart.getChart=function(){return null;};global.Chart=Chart;\n"
+"global.IntersectionObserver=function(){return {observe(){}};};\n"
+"try{eval(code);}catch(e){console.error('RUNTIME: '+e.message);process.exit(3);}\n")
+    _r2 = subprocess.run(["node", _harness], capture_output=True, text=True)
+    for _p in (_tmp, _harness):
+        try: os.remove(_p)
+        except OSError: pass
+    if _r2.returncode != 0:
+        fail("Dashboard JS threw at RUNTIME — NOT pushing.\n" + (_r2.stderr or _r2.stdout)[-800:])
+    print("JS syntax + runtime check passed.")
 else:
-    print("WARNING: node not found — skipping JS syntax check (install node to enable the guard).")
+    print("WARNING: node not found — skipping JS checks (install node to enable the guard).")
 
 # ---------- 3. Push to GitHub ----------
 if "--no-push" in sys.argv:
