@@ -239,6 +239,7 @@ function relDelta(c,b){ return (b>0)?(c-b)/b:null; }
 function deltaCls(d){ return d===null?"flat":d>0.005?"up":d<-0.005?"down":"flat"; }
 function fmtSigned(d){ return d===null?"n/a":(d>=0?"+":"")+(100*d).toFixed(1)+"%"; }
 function fmtDate(iso){ const d=new Date(iso+"T12:00:00"); return d.toLocaleDateString("en-GB",{day:"numeric",month:"short"}); }
+function wkEnd(iso){ const d=new Date(iso+"T12:00:00"); d.setDate(d.getDate()+6); return d.toLocaleDateString("en-GB",{day:"numeric",month:"short"}); } // week-ending label (weekStart+6)
 function sumRows(rows,from,to){ const o={sessions:0,atc:0,checkout:0,purchase:0}; for(const r of rows){ const d=r[0].slice(0,10); if(d>=from&&d<=to){o.sessions+=+r[1];o.atc+=+r[2];o.checkout+=+r[3];o.purchase+=+r[4];} } return o; }
 function sumPlat(rows,from,to){ let orders=0,revenue=0; for(const r of rows){ const d=r[0].slice(0,10); if(d>=from&&d<=to){orders+=+r[1];revenue+=+r[2];} } return {orders,revenue}; }
 function asMap(rows){ const m={}; for(const r of rows) m[r[0]]={sessions:+r[1],atc:+r[2],checkout:+r[3],purchase:+r[4]}; return m; }
@@ -520,7 +521,7 @@ function drawCollTrend(i){ const T=SNAPSHOT.collectionsTrend; if(!T||!T.handles|
         x:{ticks:{font:{size:9}}}}}}); }
 let _tc=null,_rc=null;
 function drawTraffic(){ const W=SNAPSHOT.trafficWeekly; if(!W||!W.rows) return; const r=W.rows.map(x=>({w:x[0],s:+x[1],v:+x[2]}));
-  if(_tc)_tc.destroy(); _tc=new Chart(document.getElementById("ddTraffic"),{type:"line",data:{labels:r.map(x=>fmtDate(x.w)),datasets:[
+  if(_tc)_tc.destroy(); _tc=new Chart(document.getElementById("ddTraffic"),{type:"line",data:{labels:r.map(x=>wkEnd(x.w)),datasets:[
     {label:"Sessions",data:r.map(x=>x.s),borderColor:"#b14f6b",borderWidth:2,pointRadius:2,tension:.25},
     {label:"Visitors",data:r.map(x=>x.v),borderColor:"#0e6e48",borderDash:[5,4],borderWidth:2,pointRadius:2,tension:.25}]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{boxWidth:12,font:{size:11}}}},scales:{y:{ticks:{callback:v=>(v/1000)+"k",font:{size:10}}},x:{ticks:{font:{size:9},maxRotation:45,autoSkip:true}}}}}); }
@@ -528,7 +529,7 @@ let _tsc=null;
 function drawTrafficSrc(){ const S=SNAPSHOT.trafficBySource; if(!S||!S.series||!window.Chart) return;
   const colors={direct:"#b14f6b",search:"#0e6e48",social:"#d98a3d",email:"#6b5bd1"};
   const ds=S.sources.map(s=>({label:s.charAt(0).toUpperCase()+s.slice(1),data:S.series[s],borderColor:colors[s]||"#94a3b8",backgroundColor:colors[s]||"#94a3b8",borderWidth:2,pointRadius:0,tension:.25}));
-  if(_tsc)_tsc.destroy(); _tsc=new Chart(document.getElementById("ddTrafficSrc"),{type:"line",data:{labels:S.weeks.map(w=>fmtDate(w)),datasets:ds},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{boxWidth:12,font:{size:11}}}},scales:{y:{ticks:{callback:v=>(v/1000)+"k",font:{size:10}}},x:{ticks:{font:{size:9},maxRotation:45,autoSkip:true}}}}}); }
+  if(_tsc)_tsc.destroy(); _tsc=new Chart(document.getElementById("ddTrafficSrc"),{type:"line",data:{labels:S.weeks.map(w=>wkEnd(w)),datasets:ds},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{boxWidth:12,font:{size:11}}}},scales:{y:{ticks:{callback:v=>(v/1000)+"k",font:{size:10}}},x:{ticks:{font:{size:9},maxRotation:45,autoSkip:true}}}}}); }
 let _cht=null;
 function channelTrendHTML(){
   if(!SNAPSHOT.channelTrend) return "";
@@ -544,13 +545,13 @@ function drawChannelTrend(metric,btn){ const T=SNAPSHOT.channelTrend; if(!T||!wi
     else if(metric==="atc") data=s.sessions.map((v,i)=>v?100*s.atc[i]/v:0);
     else data=s.sessions.map((v,i)=>v?100*s.purchase[i]/v:0);
     return {label:ch.charAt(0).toUpperCase()+ch.slice(1),data:data,borderColor:colors[ch]||"#94a3b8",backgroundColor:colors[ch]||"#94a3b8",borderWidth:2,pointRadius:0,tension:.25}; });
-  if(_cht)_cht.destroy(); _cht=new Chart(document.getElementById("ddChannelTrend"),{type:"line",data:{labels:T.weeks.map(w=>fmtDate(w)),datasets:ds},
+  if(_cht)_cht.destroy(); _cht=new Chart(document.getElementById("ddChannelTrend"),{type:"line",data:{labels:T.weeks.map(w=>wkEnd(w)),datasets:ds},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{boxWidth:12,font:{size:11}}}},scales:{y:{ticks:{callback:v=>isPct?v.toFixed(1)+"%":(v>=1000?(v/1000)+"k":v),font:{size:10}}},x:{ticks:{font:{size:9},maxRotation:45,autoSkip:true}}}}}); }
 let _rav=null;
 function drawRevenueTrend(seg,btn){ const R=SNAPSHOT.revenueTrend; if(!R||!R.seg||!window.Chart) return; seg=seg||"all"; const S=R.seg[seg]||R.seg.all;
   if(btn) document.querySelectorAll("#revSeg .tg-btn").forEach(b=>b.classList.toggle("active",b===btn));
   const grossAov=S.gross.map((v,i)=>S.orders[i]?v/S.orders[i]:0), netAov=S.total.map((v,i)=>S.orders[i]?v/S.orders[i]:0);
-  if(_rav)_rav.destroy(); _rav=new Chart(document.getElementById("ddRevAov"),{data:{labels:R.weeks.map(w=>fmtDate(w)),datasets:[
+  if(_rav)_rav.destroy(); _rav=new Chart(document.getElementById("ddRevAov"),{data:{labels:R.weeks.map(w=>wkEnd(w)),datasets:[
     {type:"bar",label:"Revenue (total)",data:S.total,backgroundColor:"#e9b9c6",yAxisID:"yR",order:3},
     {type:"line",label:"Gross AOV",data:grossAov,borderColor:"#b14f6b",borderWidth:2,pointRadius:0,tension:.25,yAxisID:"yA",order:1},
     {type:"line",label:"Net AOV",data:netAov,borderColor:"#0e6e48",borderWidth:2,borderDash:[5,4],pointRadius:0,tension:.25,yAxisID:"yA",order:2}]},
@@ -565,7 +566,7 @@ function drawReviews(){ const R=SNAPSHOT.reviews; if(!R||!R.daily) return;
   if(keys.length>2) keys=keys.slice(1);                                  // drop first (partial window edge)
   if(keys.length && wk[keys[keys.length-1]].days < 7) keys=keys.slice(0,-1); // drop last only if it's a partial week
   const rows=keys.map(k=>({w:k,n:wk[k].n,e:wk[k].e}));
-  if(_rc)_rc.destroy(); _rc=new Chart(document.getElementById("ddReviews"),{type:"line",data:{labels:rows.map(x=>fmtDate(x.w)),datasets:[
+  if(_rc)_rc.destroy(); _rc=new Chart(document.getElementById("ddReviews"),{type:"line",data:{labels:rows.map(x=>wkEnd(x.w)),datasets:[
     {label:"New-launch products",data:rows.map(x=>x.n),borderColor:"#e6147a",backgroundColor:"#e6147a",borderWidth:3,pointRadius:2,tension:.25,yAxisID:"yNew"},
     {label:"Existing products",data:rows.map(x=>x.e),borderColor:"#334155",borderDash:[6,4],borderWidth:2,pointRadius:2,tension:.25,yAxisID:"yExist"}]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{boxWidth:12,font:{size:11}}}},
