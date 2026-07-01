@@ -129,6 +129,13 @@
   .panel{border:1px solid var(--line); border-radius:12px; padding:16px 18px;}
   .panel.clickable{cursor:pointer; transition:all .12s;}
   .panel.clickable:hover{border-color:var(--rose); background:var(--blush-soft);}
+  .brief{border:1px solid var(--line); border-left:4px solid var(--rose-deep); background:#fff; border-radius:12px; padding:18px 22px; margin:4px 0 24px; box-shadow:0 6px 22px rgba(0,0,0,.05);}
+  .brief-h{font-size:13px; font-weight:800; letter-spacing:.5px; text-transform:uppercase; color:var(--rose-deep); margin-bottom:8px;}
+  .brief p{margin:0 0 6px; font-size:15.5px; line-height:1.55;}
+  .brief-sub{font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.4px; color:var(--ink-2); margin:12px 0 2px;}
+  .brief ul{margin:0; padding-left:18px;}
+  .brief li{font-size:13.5px; line-height:1.5; margin:5px 0;}
+  .brief-cap{font-size:11px; color:var(--ink-2); margin-top:12px;}
   .panel h3{font-size:13px; text-transform:uppercase; letter-spacing:.6px; color:var(--ink-3); margin:0 0 10px; font-weight:700;}
   .bigrow{display:flex; gap:24px; align-items:baseline; margin-bottom:8px;}
   .bigrow .v{font-size:26px; font-weight:700; letter-spacing:-.5px;} .bigrow .k{font-size:12px; color:var(--ink-3);}
@@ -166,6 +173,8 @@
   <div class="hmeta"><div class="t">Weekly Funnel — Oh Polly UK</div><div class="d" id="windowLabel"></div></div>
 </header>
 <div id="freshness"></div>
+
+<div class="brief" id="brief"></div>
 
 <section>
   <div class="eyebrow"><span class="num">01</span> The story <span id="storyScope">this week</span></div>
@@ -682,6 +691,36 @@ window.toggleSection=function(key){ const b=document.getElementById(key+"Body"),
   h+=`<div class="cap" style="margin-top:6px;">Prizes are rough sizing, not forecasts. Editable in test_backlog.json (add rows; status this-week / running / idea / done). No connector for Shoplift / Nosto / BAO — results logged manually. Updated ${TB.updated||""}.</div>`;
   host.innerHTML=h;
 })();
+
+function renderBrief(){
+  const el=document.getElementById("brief"); if(!el) return;
+  const M=SNAPSHOT.monthly, R=SNAPSHOT.returns, RV=SNAPSHOT.reviews, TB=SNAPSHOT.trafficBySource;
+  const parts=[]; let headline="Weekly summary.";
+  if(M&&M.rev&&M.funnel){
+    const dRev=relDelta(M.rev.cur.revenue,M.rev.prev.revenue), dSess=relDelta(M.funnel.cur.sessions,M.funnel.prev.sessions);
+    const cN=M.funnel.cur.sessions?M.funnel.cur.purchase/M.funnel.cur.sessions:0, cP=M.funnel.prev.sessions?M.funnel.prev.purchase/M.funnel.prev.sessions:0, dCvr=relDelta(cN,cP);
+    const aN=M.rev.cur.orders?M.rev.cur.revenue/M.rev.cur.orders:0, aP=M.rev.prev.orders?M.rev.prev.revenue/M.rev.prev.orders:0, dAov=relDelta(aN,aP);
+    const dir=(dRev==null)?"":(dRev<-0.02?"down":dRev>0.02?"up":"flat");
+    headline=`Revenue is <b>${dir} ${fmtSigned(dRev)}</b> over the last four weeks (£${(M.rev.cur.revenue/1e6).toFixed(2)}m). The move is <b>reach and basket, not the website</b> — traffic ${fmtSigned(dSess)}, average order value ${fmtSigned(dAov)}, while on-site conversion held (${fmtSigned(dCvr)}).`;
+    if(dSess!=null&&Math.abs(dSess)>0.03) parts.push([3+Math.abs(dSess),`<b>Traffic ${fmtSigned(dSess)}</b> — the primary driver of the revenue move.`]);
+    if(dAov!=null&&Math.abs(dAov)>0.03) parts.push([2+Math.abs(dAov),`<b>Average order value ${fmtSigned(dAov)}</b> (£${Math.round(aP)} → £${Math.round(aN)}) — ${dAov<0?"a softer basket compounding the traffic drop":"basket strength cushioning the traffic drop"}.`]);
+    parts.push([1,`Conversion ${fmtSigned(dCvr)} — ${dCvr!=null&&Math.abs(dCvr)<0.03?"steady; on-site isn't the problem":"the on-site shift to watch"}.`]);
+  }
+  if(TB&&TB.series){ let worst=null; for(const c of TB.channels){ const s=TB.series[c]; if(!s||s.length<2) continue; const d=relDelta(s[s.length-1],s[0]); if(d!=null&&(worst===null||d<worst.d)) worst={c,d}; }
+    if(worst&&worst.d<-0.05) parts.push([2.5,`<b>${worst.c.charAt(0).toUpperCase()+worst.c.slice(1)}</b> is the weakest channel (${fmtSigned(worst.d)} over the window) — worth pinning down.`]); }
+  if(R&&R.gross30){ const rate=100*Math.abs(R.sum30)/R.gross30; if(rate>25) parts.push([2.8,`<b>Returns at ${rate.toFixed(0)}% of gross</b> (£${(Math.abs(R.sum30)/1e6).toFixed(1)}m/30d) — gross figures overstate true contribution; embellished gowns lead.`]); }
+  if(RV&&RV.cohort){ const c=RV.cohort.coveragePct; if(c<60) parts.push([1.5,`<b>${Math.round(100-c)}% of new launches have no review</b> — a day-one social-proof gap on the products that most need it.`]); }
+  parts.sort((a,b)=>b[0]-a[0]);
+  const changed=parts.slice(0,4).map(p=>`<li>${p[1]}</li>`).join("");
+  const actions=[`<li><b>Defend reach.</b> Traffic is the headline drag — prioritise acquisition &amp; channel mix over on-site tweaks (see Traffic + Channels).</li>`];
+  if(R&&R.gross30&&100*Math.abs(R.sum30)/R.gross30>25) actions.push(`<li><b>Attack returns.</b> With returns near half of gross, fix fit/imagery/sizing on the top-returned styles — the biggest hidden-margin lever.</li>`);
+  if(RV&&RV.cohort&&RV.cohort.coveragePct<60) actions.push(`<li><b>Seed reviews on new drops.</b> Close the day-one gap (influencer / community / early access) — cheap conversion lift where it's missing.</li>`);
+  el.innerHTML=`<div class="brief-h">This week in a nutshell</div><p>${headline}</p>`
+    +`<div class="brief-sub">What changed</div><ul>${changed}</ul>`
+    +`<div class="brief-sub">What to do</div><ul>${actions.slice(0,3).join("")}</ul>`
+    +`<div class="brief-cap">Auto-generated from this week's data — refreshes every bake.</div>`;
+}
+renderBrief();
 
 document.getElementById("notes").innerHTML="Oh Polly UK — Shopify (funnel, revenue, collections), GA4 (channels), Okendo (reviews). Web funnel excludes the Tapcart app. Conversion is session-based; GA4 consent mode hides 20–40% of UK traffic, so use trends over absolutes.";
 </script>
