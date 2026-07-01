@@ -685,7 +685,7 @@ function renderBrief(){
     const cN=M.funnel.cur.sessions?M.funnel.cur.purchase/M.funnel.cur.sessions:0, cP=M.funnel.prev.sessions?M.funnel.prev.purchase/M.funnel.prev.sessions:0, dCvr=relDelta(cN,cP);
     const aN=M.rev.cur.orders?M.rev.cur.revenue/M.rev.cur.orders:0, aP=M.rev.prev.orders?M.rev.prev.revenue/M.rev.prev.orders:0, dAov=relDelta(aN,aP);
     const dir=(dRev==null)?"":(dRev<-0.02?"down":dRev>0.02?"up":"flat");
-    headline=`Revenue is <b>${dir} ${fmtSigned(dRev)}</b> over the last four weeks (£${(M.rev.cur.revenue/1e6).toFixed(2)}m). The move is <b>reach and basket, not the website</b> — traffic ${fmtSigned(dSess)}, average order value ${fmtSigned(dAov)}, while on-site conversion held (${fmtSigned(dCvr)}).`;
+    headline=`Revenue is <b>${dir} ${fmtSigned(dRev)}</b> over the last four weeks (£${(M.rev.cur.revenue/1e6).toFixed(2)}m), driven mainly by <b>fewer visitors (traffic ${fmtSigned(dSess)})</b> and <b>smaller orders (AOV ${fmtSigned(dAov)})</b> — the funnel itself is steady (conversion ${fmtSigned(dCvr)}).`;
     if(dSess!=null&&Math.abs(dSess)>0.03) parts.push([3+Math.abs(dSess),`<b>Traffic ${fmtSigned(dSess)}</b> — the primary driver of the revenue move.`]);
     if(dAov!=null&&Math.abs(dAov)>0.03) parts.push([2+Math.abs(dAov),`<b>Average order value ${fmtSigned(dAov)}</b> (£${Math.round(aP)} → £${Math.round(aN)}) — ${dAov<0?"a softer basket compounding the traffic drop":"basket strength cushioning the traffic drop"}.`]);
     parts.push([1,`Conversion ${fmtSigned(dCvr)} — ${dCvr!=null&&Math.abs(dCvr)<0.03?"steady; on-site isn't the problem":"the on-site shift to watch"}.`]);
